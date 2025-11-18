@@ -62,3 +62,5 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 biocViews: RNASeq, DifferentialExpression, GeneExpression, Pathways
+URL: https://github.com/katkaciska/RNAseqAnalyzer
+BugReports: https://github.com/katkaciska/RNAseqAnalyzer/issues
