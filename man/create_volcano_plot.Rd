@@ -11,7 +11,16 @@ create_volcano_plot(
   output_file = NULL,
   n_labels = 10,
   width = 10,
-  height = 8
+  height = 8,
+  color_up = "#E31A1C",
+  color_down = "#1F78B4",
+  color_ns = "grey50",
+  point_size = 2.5,
+  label_size = 3.5,
+  n_labels_up = NULL,
+  n_labels_down = NULL,
+  gene_label_column = NULL,
+  highlight_genes = NULL
 )
 }
 \arguments{

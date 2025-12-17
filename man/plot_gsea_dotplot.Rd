@@ -9,7 +9,11 @@ plot_gsea_dotplot(
   n_pathways = 30,
   output_file = NULL,
   width = 10,
-  height = 8
+  height = 8,
+  padj_threshold = 0.05,
+  color_up = "#E31A1C",
+  color_down = "#1F78B4",
+  color_ns = "grey70"
 )
 }
 \arguments{

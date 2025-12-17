@@ -4,19 +4,14 @@
 \alias{summarize_de_results}
 \title{Summarize Differential Expression Results}
 \usage{
-summarize_de_results(efit, fdr_threshold = 0.1, lfc_threshold = 1)
-}
-\arguments{
-\item{efit}{eBayes fit object from limma}
-
-\item{fdr_threshold}{FDR threshold for significance}
-
-\item{lfc_threshold}{Log fold change threshold}
-}
-\value{
-List with summary statistics
+summarize_de_results(
+  fit,
+  fdr_threshold = 0.1,
+  lfc_threshold = 1,
+  fit_label = "efit"
+)
 }
 \description{
-Creates a summary of differential expression results.
+Summarize Differential Expression Results
 }
 \keyword{internal}

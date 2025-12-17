@@ -9,7 +9,11 @@ plot_gsea_barplot(
   n_pathways = 20,
   output_file = NULL,
   width = 8,
-  height = 6
+  height = 6,
+  padj_threshold = 0.05,
+  color_up = "#E31A1C",
+  color_down = "#1F78B4",
+  color_ns = "grey70"
 )
 }
 \arguments{

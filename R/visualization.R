@@ -11,8 +11,24 @@
 #' @param height Plot height in inches (default: 8)
 #' @return ggplot object
 #' @export
-create_volcano_plot <- function(de_results, fdr_threshold = 0.1, lfc_threshold = 1,
-                               output_file = NULL, n_labels = 10, width = 10, height = 8) {
+create_volcano_plot <- function(
+    de_results,
+    fdr_threshold      = 0.1,
+    lfc_threshold      = 1,
+    output_file        = NULL,
+    n_labels           = 10,
+    width              = 10,
+    height             = 8,
+    color_up           = "#E31A1C",   # default red
+    color_down         = "#1F78B4",   # default blue
+    color_ns           = "grey50",    # default non-significant
+    point_size         = 2.5,         # size of dots
+    label_size         = 3.5,         # size of gene labels
+    n_labels_up        = NULL,        # how many up genes to label
+    n_labels_down      = NULL,        # how many down genes to label
+    gene_label_column  = NULL,        # column to use for labels (e.g. "gene_name")
+    highlight_genes    = NULL         # NEW: vector of genes to force-label
+) {
 
   # Check required packages
   required_pkgs <- c("ggplot2", "ggrepel")
@@ -26,72 +42,145 @@ create_volcano_plot <- function(de_results, fdr_threshold = 0.1, lfc_threshold =
   if (is.data.frame(de_results)) {
     plot_data <- de_results
   } else {
-    # Assume it's a limma efit object
+    # Assume it's a limma efit/tfit object
     plot_data <- data.frame(
-      gene_id = rownames(de_results$coefficients),
-      logFC = de_results$coefficients[, 1],
+      gene_id   = rownames(de_results$coefficients),
+      logFC     = de_results$coefficients[, 1],
       adj.P.Val = p.adjust(de_results$p.value[, 1], method = "fdr"),
       stringsAsFactors = FALSE
     )
   }
 
+  # Ensure gene_id exists
+  if (!"gene_id" %in% colnames(plot_data)) {
+    plot_data$gene_id <- rownames(plot_data)
+  }
+
+  ## --------- GENE LABEL HANDLING ---------
+  # Priority:
+  # 1) If user gave gene_label_column and it exists → use that
+  # 2) Else if "gene_name" exists → use that
+  # 3) Else if "symbol" exists → use that
+  # 4) Else try to strip things before first "_" (SYMBOL_ENSG...)
+  # 5) Else fall back to gene_id
+
+  if (!is.null(gene_label_column) && gene_label_column %in% colnames(plot_data)) {
+    plot_data$gene_label <- plot_data[[gene_label_column]]
+  } else if ("gene_name" %in% colnames(plot_data)) {
+    plot_data$gene_label <- plot_data$gene_name
+  } else if ("symbol" %in% colnames(plot_data)) {
+    plot_data$gene_label <- plot_data$symbol
+  } else {
+    plot_data$gene_label <- ifelse(
+      grepl("_", plot_data$gene_id),
+      sub("_.*", "", plot_data$gene_id),
+      plot_data$gene_id
+    )
+  }
+
   # Add significance categories
   plot_data$significance <- "Not Significant"
-  plot_data$significance[plot_data$adj.P.Val <= fdr_threshold & plot_data$logFC > lfc_threshold] <- "Upregulated"
-  plot_data$significance[plot_data$adj.P.Val <= fdr_threshold & plot_data$logFC < -lfc_threshold] <- "Downregulated"
+  plot_data$significance[
+    plot_data$adj.P.Val <= fdr_threshold & plot_data$logFC >  lfc_threshold
+  ] <- "Upregulated"
+  plot_data$significance[
+    plot_data$adj.P.Val <= fdr_threshold & plot_data$logFC < -lfc_threshold
+  ] <- "Downregulated"
 
-  # Select genes to label
+  ## --------- HOW MANY GENES TO LABEL (automatic top-N) ---------
+  if (is.null(n_labels_up) || is.null(n_labels_down)) {
+    # Split n_labels between up and down if specific numbers not given
+    n_labels_up   <- floor(n_labels / 2)
+    n_labels_down <- n_labels - n_labels_up
+  }
+
+  # Initialize label column
   plot_data$label <- ""
-  if (n_labels > 0) {
-    # Top upregulated
+
+  # Top-N upregulated
+  if (n_labels_up > 0) {
     top_up <- plot_data[plot_data$significance == "Upregulated", ]
     if (nrow(top_up) > 0) {
-      top_up <- head(top_up[order(top_up$adj.P.Val), ], n_labels/2)
-      plot_data$label[plot_data$gene_id %in% top_up$gene_id] <- plot_data$gene_id[plot_data$gene_id %in% top_up$gene_id]
-    }
-
-    # Top downregulated
-    top_down <- plot_data[plot_data$significance == "Downregulated", ]
-    if (nrow(top_down) > 0) {
-      top_down <- head(top_down[order(top_down$adj.P.Val), ], n_labels/2)
-      plot_data$label[plot_data$gene_id %in% top_down$gene_id] <- plot_data$gene_id[plot_data$gene_id %in% top_down$gene_id]
+      top_up <- head(top_up[order(top_up$adj.P.Val), ], n_labels_up)
+      idx_up <- plot_data$gene_id %in% top_up$gene_id
+      plot_data$label[idx_up] <- plot_data$gene_label[idx_up]
     }
   }
 
+  # Top-N downregulated
+  if (n_labels_down > 0) {
+    top_down <- plot_data[plot_data$significance == "Downregulated", ]
+    if (nrow(top_down) > 0) {
+      top_down <- head(top_down[order(top_down$adj.P.Val), ], n_labels_down)
+      idx_down <- plot_data$gene_id %in% top_down$gene_id
+      plot_data$label[idx_down] <- plot_data$gene_label[idx_down]
+    }
+  }
+
+  ## --------- FORCE-LABEL USER-SPECIFIED GENES ---------
+  if (!is.null(highlight_genes)) {
+    highlight_genes <- unique(as.character(highlight_genes))
+
+    # Matches by gene_label OR gene_id
+    idx_hl <- plot_data$gene_label %in% highlight_genes |
+      plot_data$gene_id    %in% highlight_genes
+
+    # For those, ensure we have a label (don’t overwrite existing non-empty labels)
+    to_fill <- idx_hl & (is.na(plot_data$label) | plot_data$label == "")
+    plot_data$label[to_fill] <- plot_data$gene_label[to_fill]
+  }
+
   # Create plot
-  p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = logFC, y = -log10(adj.P.Val),
-                                               color = significance, label = label)) +
-    ggplot2::geom_point(alpha = 0.7, size = 1.5) +
+  p <- ggplot2::ggplot(
+    plot_data,
+    ggplot2::aes(
+      x     = logFC,
+      y     = -log10(adj.P.Val),
+      color = significance,
+      label = label
+    )
+  ) +
+    ggplot2::geom_point(alpha = 0.9, size = point_size) +
     ggplot2::scale_color_manual(
-      values = c("Not Significant" = "grey50", "Upregulated" = "#E31A1C", "Downregulated" = "#1F78B4"),
+      values = c(
+        "Not Significant" = color_ns,
+        "Upregulated"     = color_up,
+        "Downregulated"   = color_down
+      ),
       name = "Significance"
     ) +
-    ggplot2::geom_vline(xintercept = c(-lfc_threshold, lfc_threshold),
-                       linetype = "dashed", color = "grey40") +
-    ggplot2::geom_hline(yintercept = -log10(fdr_threshold),
-                       linetype = "dashed", color = "grey40") +
+    ggplot2::geom_vline(
+      xintercept = c(-lfc_threshold, lfc_threshold),
+      linetype   = "dashed",
+      color      = "grey40"
+    ) +
+    ggplot2::geom_hline(
+      yintercept = -log10(fdr_threshold),
+      linetype   = "dashed",
+      color      = "grey40"
+    ) +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::labs(
       title = "Volcano Plot - Differential Gene Expression",
-      x = expression(log[2]~"Fold Change"),
-      y = expression(-log[10]~"Adjusted P-value")
+      x     = expression(log[2] ~ "Fold Change"),
+      y     = expression(-log[10] ~ "Adjusted P-value")
     ) +
     ggplot2::theme(
-      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+      plot.title      = ggplot2::element_text(hjust = 0.5, face = "bold"),
       legend.position = "bottom"
     )
 
   # Add labels
   if (any(plot_data$label != "")) {
     p <- p + ggrepel::geom_text_repel(
-      data = plot_data[plot_data$label != "", ],
-      max.overlaps = 20,
+      data               = plot_data[plot_data$label != "", ],
+      max.overlaps       = 20,
       min.segment.length = 0.1,
-      box.padding = 0.5,
-      point.padding = 0.3,
-      segment.color = "grey50",
-      size = 3,
-      show.legend = FALSE
+      box.padding        = 0.5,
+      point.padding      = 0.3,
+      segment.color      = "grey50",
+      size               = label_size,
+      show.legend        = FALSE
     )
   }
 
@@ -103,6 +192,8 @@ create_volcano_plot <- function(de_results, fdr_threshold = 0.1, lfc_threshold =
 
   return(p)
 }
+
+
 #' Create PCA Plot
 #'
 #' Creates a PCA plot from expression data with sample annotations.

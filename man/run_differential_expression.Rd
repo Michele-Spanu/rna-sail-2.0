@@ -14,7 +14,10 @@ run_differential_expression(
   experiment_name,
   output_dir,
   fdr_threshold = 0.1,
-  lfc_threshold = 1
+  lfc_threshold = 1,
+  covariates = NULL,
+  design_formula = NULL,
+  contrast_string = NULL
 )
 }
 \arguments{
@@ -37,10 +40,19 @@ run_differential_expression(
 \item{fdr_threshold}{FDR threshold for significance (default: 0.1)}
 
 \item{lfc_threshold}{Log fold change threshold (default: 1)}
+
+\item{covariates}{Optional character vector of covariate columns in metadata (e.g. c("cell_line","batch"))}
+
+\item{design_formula}{Optional design formula string (advanced), e.g. "~ cell_line + condition".
+Must include condition_column. If it contains ':' or '*', provide contrast_string.}
+
+\item{contrast_string}{Optional limma contrast string. If NULL and design has no interactions,
+a default group1 vs group2 contrast is used.}
 }
 \value{
 List containing DE results and summary statistics
 }
 \description{
-Runs the complete differential expression analysis pipeline for two groups.
+Runs the complete differential expression analysis pipeline for two groups,
+optionally adjusting for covariates and/or using a user-defined design formula.
 }

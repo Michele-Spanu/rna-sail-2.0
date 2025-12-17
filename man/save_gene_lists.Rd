@@ -5,28 +5,15 @@
 \title{Save Gene Lists}
 \usage{
 save_gene_lists(
-  efit,
+  fit,
   experiment_name,
   output_dir,
   fdr_threshold,
-  lfc_threshold
+  lfc_threshold,
+  fit_label = "efit"
 )
 }
-\arguments{
-\item{efit}{eBayes fit object from limma}
-
-\item{experiment_name}{Name of the experiment}
-
-\item{output_dir}{Output directory}
-
-\item{fdr_threshold}{FDR threshold for significance}
-
-\item{lfc_threshold}{Log fold change threshold}
-}
-\value{
-None (invisible)
-}
 \description{
-Saves lists of up- and down-regulated genes to files.
+Save Gene Lists
 }
 \keyword{internal}

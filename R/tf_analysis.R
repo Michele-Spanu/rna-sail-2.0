@@ -620,27 +620,36 @@ plot_tf_activity_heatmap <- function(tf_activities,
   sample_order <- match(colnames(tf_scaled), metadata$SampleID)
   metadata_ordered <- metadata[sample_order, , drop = FALSE]
 
+  # Extract condition vector
+  cond_vec <- metadata_ordered[[condition_column]]
 
-  # Conditions and colors
-  conds <- unique(metadata_ordered[[condition_column]])
-
-
+  # Unique non-NA conditions
+  conds <- sort(unique(na.omit(cond_vec)))
   n_conds <- length(conds)
-  if (n_conds <= 9) {
-    cond_cols <- RColorBrewer::brewer.pal(n_conds, "Set1")
+
+  if (n_conds == 0) {
+    stop("No non-NA conditions found in metadata for column: ", condition_column)
+  }
+
+  if (n_conds == 1) {
+    # Single condition – just pick one color
+    cond_cols <- "#E41A1C"
+  } else if (n_conds <= 9) {
+    # Brewer needs n >= 3, so take first n_conds colors
+    cond_cols <- RColorBrewer::brewer.pal(max(n_conds, 3), "Set1")[seq_len(n_conds)]
   } else {
-    # fall back to random distinct colors when > 9 conditions
     cond_cols <- circlize::rand_color(n_conds)
   }
 
   col_colors <- setNames(cond_cols, conds)
   print(col_colors)
 
-  # Column annotation
+  # Column annotation (NA conditions will just have no color)
   ha <- ComplexHeatmap::HeatmapAnnotation(
-    Condition = metadata_ordered[[condition_column]],
+    Condition = factor(cond_vec, levels = conds),
     col = list(Condition = col_colors)
   )
+
 
   # Create heatmap
   output_file <- file.path(output_dir, paste0(experiment_name, "_TF_activity_heatmap.pdf"))

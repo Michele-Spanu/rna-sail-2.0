@@ -28,8 +28,9 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
                                  experiment_name, output_dir, species = "mouse",
                                  run_wgcna = TRUE, run_tf_analysis = TRUE,
                                  run_immune_analysis = TRUE, run_lincs_analysis = TRUE,
-                                 remove_samples = NULL, lfc_threshold = 1,
-                                 fdr_threshold = 0.05) {
+                                 remove_samples = NULL, lfc_threshold = 1,color_volcano_up="#CA3433",color_volcano_down="#2B7CB6",genes_to_label=NULL,covariates = NULL, design_formula = NULL, contrast_string = NULL,
+                                 fdr_threshold = 0.05,point_size_volcano=4,label_size_volcano=5,n_labels_up=10,n_labels_down=10,gsea_custom_pathways=NULL,n_gsea_enrich_up=5,n_gsea_enrich_down=5, color_gsea_down="#2B7CB6", color_gsea_up="#CA3433",color_gsea_ns="#C5C6C7",run_ssgsea=TRUE, ssgsea_extra_pathways=NULL, ssgsea_n_boxplot_pathways = 20)
+  {
 
   # Start timing
   start_time <- Sys.time()
@@ -64,7 +65,7 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
   message("  - Counts: ", nrow(counts), " genes x ", ncol(counts)-2, " samples")
   message("  - TPM: ", nrow(tpm), " genes x ", ncol(tpm)-2, " samples")
   message("  - Metadata: ", nrow(metadata), " samples")
-
+  print(metadata)
   # Filter protein-coding genes
   pc_counts <- filter_protein_coding_genes(counts, gtf)
   pc_tpm <- filter_protein_coding_genes(tpm, gtf)
@@ -75,7 +76,6 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
     log_transform = TRUE,
     remove_samples = remove_samples
   )
-  print(pc_tpm_processed)
 
   pc_counts_processed <- prepare_expression_data(
     pc_counts,
@@ -85,13 +85,11 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
 
   # Match metadata
   metadata_matched <- match_metadata_to_expression(pc_counts_processed, metadata, sample_id_column)
-  print(head(metadata_matched))
   results$preprocessing <- list(
     pc_counts = pc_counts_processed,
     pc_tpm = pc_tpm_processed,
     metadata = metadata_matched
   )
-  print(head(pc_counts_processed))
   # ========== 2. Exploratory Data Analysis ==========
   message("\nStep 2: Exploratory data analysis...")
   # Define shared color mapping
@@ -134,8 +132,7 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
 
   # ========== 3. Differential Expression Analysis ==========
   message("\nStep 3: Differential expression analysis...")
-  print(group1_condition)
-  print(pc_counts_processed)
+
   de_results <- run_differential_expression(
     counts_data = pc_counts_processed,
     metadata = metadata_matched,
@@ -145,15 +142,27 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
     sample_id_column = sample_id_column,
     experiment_name = experiment_name,
     output_dir = output_dir,
-    lfc_threshold    = lfc_threshold,
-    fdr_threshold    = fdr_threshold
+    lfc_threshold = lfc_threshold,
+    fdr_threshold = fdr_threshold,
+    covariates = covariates,
+    design_formula = design_formula,
+    contrast_string = contrast_string
   )
 
   # Create visualizations
   create_volcano_plot(
     de_results$de_results$efit,
-    fdr_threshold = 0.1, lfc_threshold = 1,
-    output_file = file.path(output_dir, paste0(experiment_name, "_volcano_plot.pdf"))
+    fdr_threshold = fdr_threshold,              # keep your current choice
+    lfc_threshold = lfc_threshold,
+    output_file  = file.path(output_dir, paste0(experiment_name, "_volcano_plot.pdf")),
+    color_up     = color_volcano_up,
+    color_down   = color_volcano_down,
+    point_size        = point_size_volcano,
+    label_size        = label_size_volcano,
+    n_labels_up       = n_labels_up,
+    n_labels_down     = n_labels_down,
+    highlight_genes = genes_to_label
+    # color_ns keeps default "grey50", or you can add a color_volcano_ns arg as well
   )
 
   create_ma_plot(
@@ -177,23 +186,73 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
     species = ifelse(species == "mouse", "MM", "HS")
   )
 
+  # Extract gene sets and ranks once here
+  gsea_gene_sets  <- attr(gsea_results, "gene_sets")
+  gsea_gene_ranks <- attr(gsea_results, "gene_ranks")
+  print(gsea_gene_sets)
+  print(gsea_gene_ranks)
   # Create GSEA visualizations
   plot_gsea_barplot(
     gsea_results,
-    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_barplot.pdf"))
+    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_barplot.pdf")),
+    color_up = color_gsea_up,
+    color_down = color_gsea_down,
+    color_ns=color_gsea_ns
   )
 
   plot_gsea_dotplot(
     gsea_results,
-    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_dotplot.pdf"))
+    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_dotplot.pdf")),
+    color_up = color_gsea_up,
+    color_down = color_gsea_down,
+    color_ns = color_gsea_ns
+  )
+  create_gsea_table_plot(
+    gsea_results,
+    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_tableplot.pdf")),
+    gene_sets = gsea_gene_sets,
+    gene_ranks = gsea_gene_ranks
+  )
+
+  plot_gsea_enrichment(
+    gsea_results,
+    pathways    = gsea_custom_pathways,   # NULL ⇒ auto top up/down
+    n_up        = n_gsea_enrich_up,
+    n_down      = n_gsea_enrich_down,
+    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_enrichment.pdf")),
+    gene_sets   = gsea_gene_sets,
+    gene_ranks  = gsea_gene_ranks
   )
 
   # Save pathway results
   save_pathway_results(gsea_results, NULL, experiment_name, output_dir)
 
   results$pathway_analysis <- list(
-    gsea = gsea_results
+    gsea = gsea_results,
+    gene_sets = gsea_gene_sets,
+    gene_ranks = gsea_gene_ranks
   )
+
+  if (run_ssgsea) {
+    message("\nStep 5a: ssGSEA pathway activity analysis...")
+
+    ssgsea_results <- run_ssgsea_analysis(
+      expr_data        = pc_tpm_processed,
+      metadata         = metadata_matched,
+      condition_column = condition_column,
+      sample_id_column = sample_id_column,
+      group1           = group1_condition,
+      group2           = group2_condition,
+      species          = species,
+      extra_pathways   = ssgsea_extra_pathways,
+      output_dir       = output_dir,
+      experiment_name  = experiment_name,
+      n_boxplot_pathways = ssgsea_n_boxplot_pathways
+    )
+
+    results$ssgsea <- ssgsea_results
+  }
+
 
   if (run_wgcna) {
     message("\nStep 5b: WGCNA enriched co-expression analysis...")
@@ -228,6 +287,9 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
 
     results$transcription_factors <- tf_results
   }
+
+
+
 
   # ========== 7. Immune Cell Deconvolution ==========
   if (run_immune_analysis) {

@@ -204,34 +204,48 @@ perform_lincs_gess <- function(query_signature, output_dir, experiment_name) {
     stop("Package 'signatureSearch' is required")
   }
 
+  # NEW: load signatureSearchData and clue_moa_list
+  if (!requireNamespace("signatureSearchData", quietly = TRUE)) {
+    stop("Package 'signatureSearchData' is required for LINCS analysis. ",
+         "Install with: BiocManager::install('signatureSearchData')")
+  }
+
+  # Ensure the data object exists
+  if (!"clue_moa_list" %in% ls(envir = .GlobalEnv)) {
+    tryCatch({
+      signatureSearchData:::.onLoad()  # in case it initializes hubs
+    }, error = function(e) {})
+
+    data("clue_moa_list", package = "signatureSearchData", envir = .GlobalEnv)
+  }
+
   message("Running LINCS connectivity search... (this may take several minutes)")
 
   tryCatch({
-    # Run LINCS analysis
     lincs_results <- signatureSearch::gess_lincs(
-      qSig = query_signature,
-      sortby = "NCS",
-      tau = TRUE
+      qSig    = query_signature,
+      sortby  = "NCS",
+      tau     = TRUE
     )
 
-    # Extract results table
     results_table <- signatureSearch::result(lincs_results)
 
-    # Save results
     results_file <- file.path(output_dir, paste0(experiment_name, "_LINCS_results.tsv"))
-    write.table(results_table, file = results_file, sep = "\t", quote = FALSE, row.names = FALSE)
+    write.table(results_table, file = results_file, sep = "\t",
+                quote = FALSE, row.names = FALSE)
 
     message("LINCS analysis completed. Found ", nrow(results_table), " connections")
     message("Results saved to: ", results_file)
 
     return(list(
-      lincs_object = lincs_results,
+      lincs_object  = lincs_results,
       results_table = results_table
     ))
 
   }, error = function(e) {
     message("LINCS analysis failed: ", e$message)
-    message("This might be due to network connectivity or server issues.")
+    message("This is likely a missing data object from signatureSearchData, ",
+            "or (less likely) a connectivity issue.")
     return(NULL)
   })
 }
