@@ -1,10 +1,10 @@
 ---
-title: "RNAseqAnalyzer: End-to-End RNA-seq Analysis Workflow"
+title: "RNA-SAIL: End-to-End RNA-seq Analysis Workflow"
 author: "Katarina Vizar Cisarova"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{RNAseqAnalyzer: End-to-End RNA-seq Workflow}
+  %\VignetteIndexEntry{RNA-SAIL: End-to-End RNA-seq Workflow}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-RNAseqAnalyzer provides a complete, modular, end-to-end RNA-seq analysis workflow, integrating:
+RNA-SAIL provides a complete, modular, end-to-end RNA-seq analysis workflow, integrating:
 
 - Preprocessing
 - Exploratory data analysis
@@ -36,8 +36,8 @@ This vignette demonstrates how to run the pipeline on a typical dataset.
 # Installation
 
 ```{r, eval=FALSE}
-devtools::install("RNAseqAnalyzer")
-library(RNAseqAnalyzer)
+devtools::install("https://github.com/OncologyMedunigraz/rna-sail")
+library(rna-sail)
 ```
 
 # Input Files
@@ -128,4 +128,4 @@ sessionInfo()
 
 # Conclusion
 
-This vignette demonstrated how to run the full RNAseqAnalyzer pipeline and access the results. The package is designed to be modular, flexible, and publication-ready.
+This vignette demonstrated how to run the full RNA-SAIL pipeline and access the results. The package is designed to be modular, flexible, and publication-ready.
