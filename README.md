@@ -1,17 +1,17 @@
-# RNA-SAIL
+# RNASAIL
 
-RNA-SAIL is an R package providing a full RNA‑seq analysis workflow, including differential expression, pathway analysis, transcription factor activity, immune infiltration, WGCNA, and LINCS connectivity scoring.
+RNASAIL is an R package providing a full RNA‑seq analysis workflow, including differential expression, pathway analysis, transcription factor activity, immune infiltration, WGCNA, and LINCS connectivity scoring.
 
 ## Installation
 
-You can install RNA-SAIL via devtools:
+You can install RNASAIL via devtools:
 
 ## Install directly from GitHub
 
 ```r
 install.packages("devtools")
 devtools::install_github("OncologyMedunigraz/rna-sail")
-library(rna-sail)
+library(RNASAIL)
 ```
 
 
@@ -19,7 +19,7 @@ library(rna-sail)
 # Verify Installation
 
 ```r
-library(rna-sail)
+library(RNASAIL)
 
 rna-sail::get_required_packages()
 
@@ -68,7 +68,7 @@ results <- run_complete_pipeline(
 
 ## Vignette
 ```r
-vignette("rna-sail")
+vignette("RNASAIL")
 ```
 
 ## Issues

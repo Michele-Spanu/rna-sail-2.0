@@ -5,7 +5,7 @@
 \alias{-package}
 \alias{rna-sail}
 \alias{.onAttach}
-\title{RNA-SAIL: Comprehensive RNA-seq Analysis Pipeline}
+\title{RNASAIL: Comprehensive RNA-seq Analysis Pipeline}
 \usage{
 .onAttach(libname, pkgname)
 }

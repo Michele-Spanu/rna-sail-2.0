@@ -1,4 +1,4 @@
-#' RNA-SAIL: Comprehensive RNA-seq Analysis Pipeline
+#' RNASAIL: Comprehensive RNA-seq Analysis Pipeline
 #'
 #' This package provides functions for differential expression analysis,
 #' pathway analysis, WGCNA co-expression networks, and visualization of RNA-seq data.
@@ -8,8 +8,8 @@
 
 # Package startup message
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage("RNA-SAIL loaded successfully!")
-  packageStartupMessage("Use ?RNA-SAIL to get started.")
+  packageStartupMessage("RNASAIL loaded successfully!")
+  packageStartupMessage("Use ?RNASAIL to get started.")
 
   # Set up conflicts preferences
   if (requireNamespace("conflicted", quietly = TRUE)) {
