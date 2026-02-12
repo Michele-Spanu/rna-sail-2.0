@@ -1,17 +1,17 @@
-# RNAseqAnalyzer
+# RNA-SAIL
 
-RNAseqAnalyzer is an R package providing a full RNA‑seq analysis workflow, including differential expression, pathway analysis, transcription factor activity, immune infiltration, WGCNA, and LINCS connectivity scoring.
+RNA-SAIL is an R package providing a full RNA‑seq analysis workflow, including differential expression, pathway analysis, transcription factor activity, immune infiltration, WGCNA, and LINCS connectivity scoring.
 
 ## Installation
 
-You can install RNAseqAnalyzer in two ways:
+You can install RNA-SAIL via devtools:
 
-## 🔹  Install directly from GitHub (recommended)
+## Install directly from GitHub
 
 ```r
 install.packages("devtools")
-devtools::install_github("katkaciska/RNAseqAnalyzer")
-library(RNAseqAnalyzer)
+devtools::install_github("OncologyMedunigraz/rna-sail")
+library(rna-sail)
 ```
 
 
@@ -19,9 +19,9 @@ library(RNAseqAnalyzer)
 # Verify Installation
 
 ```r
-library(RNAseqAnalyzer)
+library(rna-sail)
 
-RNAseqAnalyzer::get_required_packages()
+rna-sail::get_required_packages()
 
 ## Required Input Files
 
@@ -37,7 +37,7 @@ Used for filtering protein‑coding genes.
 ## Quick Start
 
 ```r
-library(RNAseqAnalyzer)
+library(rna-sail)
 
 counts <- "counts.tsv"
 tpm <- "tpm.tsv"
@@ -68,10 +68,10 @@ results <- run_complete_pipeline(
 
 ## Vignette
 ```r
-vignette("RNAseqAnalyzer")
+vignette("rna-sail")
 ```
 
 ## Issues
 Submit issues at:
-https://github.com/katkaciska/RNAseqAnalyzer/issues
+https://github.com/OncologyMedunigraz/rna-sail/issues
 
