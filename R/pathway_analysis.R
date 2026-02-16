@@ -11,10 +11,11 @@
 #' @param n_perm Number of permutations (default: 100000)
 #' @return fgsea results data frame
 #' @export
-run_gsea_analysis <- function(de_results, species = "Mus musculus", category = "H",
+
+run_gsea_analysis <- function(de_results, species = "MM", category = "H",
                               subcategory = NULL, min_size = 15, max_size = 500,
                               n_perm = 100000) {
-
+  # !!! species="MM" not "Mus musculus" !!!
   # Check required packages
   required_pkgs <- c("fgsea", "msigdbr", "limma")
   for (pkg in required_pkgs) {
