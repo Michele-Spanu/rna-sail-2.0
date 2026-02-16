@@ -357,7 +357,10 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
       if (!is.null(color_mapping) && !is.null(color_mapping[[col]])) {
         col_list[[col]] <- color_mapping[[col]]
       } else if (is.factor(unique_vals) || is.character(unique_vals)) {
-        colors <- RColorBrewer::brewer.pal(min(length(unique_vals), 8), "Set1")[1:length(unique_vals)]
+        # !!! Palette creation within Set1 => further colours can be interpolated !!!
+        pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(9, "Set1"))
+        # !!! Must check grDevices is installed !!!
+        colors <- pal(length(unique_vals))
         col_list[[col]] <- setNames(colors, unique_vals)
       }
     }
@@ -369,7 +372,15 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
     )
     message("starting heatmap 5")
 
-    if (!is.null(output_file)) pdf(output_file, width = width, height = height)
+    if (!is.null(output_file)) {
+        # !!! Creates the folder if it doesn't exist (useful if fn called by itself) !!!
+        dir.create(
+        dirname(output_file),
+        recursive = TRUE,
+        showWarnings = FALSE
+        )
+        pdf(output_file, width = width, height = height)
+    }
     message("starting heatmap 6")
 
     ht <- ComplexHeatmap::Heatmap(
