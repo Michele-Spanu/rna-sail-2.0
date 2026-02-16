@@ -347,7 +347,8 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
   if (requireNamespace("ComplexHeatmap", quietly = TRUE) &&
       requireNamespace("circlize", quietly = TRUE)) {
 
-    annotation_data <- metadata_ordered[annotation_columns, drop = FALSE]
+    # !!! The first comma was missing here => error: ignoring drop !!!
+    annotation_data <- metadata_ordered[,annotation_columns, drop = FALSE]
     col_list <- list()
     message("starting heatmap 3")
     print(annotation_columns)
