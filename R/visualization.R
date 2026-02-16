@@ -328,7 +328,7 @@ create_pca_plot <- function(expr_data, metadata, color_by, shape_by = NULL,
 #' @export
 create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n_genes = 500,
                                       scale_data = TRUE, color_mapping = NULL,
-                                      output_file = NULL, width = 10, height = 8) {
+                                      output_file = NULL, min.width = 5, height = 8) {
   message("starting heatmap ")
 
   gene_vars <- apply(expr_data, 1, var, na.rm = TRUE)
@@ -380,7 +380,8 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
         recursive = TRUE,
         showWarnings = FALSE
         )
-        pdf(output_file, width = width, height = height)
+        # !!! Dynamic width !!!
+        pdf(output_file, width = 0.18*ncol(expr_scaled)+min.width, height = height)
     }
     message("starting heatmap 6")
 
