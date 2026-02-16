@@ -216,7 +216,8 @@ perform_lincs_gess <- function(query_signature, output_dir, experiment_name) {
       signatureSearchData:::.onLoad()  # in case it initializes hubs
     }, error = function(e) {})
 
-    data("clue_moa_list", package = "signatureSearchData", envir = .GlobalEnv)
+    # !!! the package was signatureSearch, not signatureSearchData !!!
+    data("clue_moa_list", package = "signatureSearch", envir = .GlobalEnv)
   }
 
   message("Running LINCS connectivity search... (this may take several minutes)")
