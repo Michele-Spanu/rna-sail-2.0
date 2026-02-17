@@ -222,6 +222,11 @@ perform_lincs_gess <- function(query_signature, output_dir, experiment_name) {
 
   message("Running LINCS connectivity search... (this may take several minutes)")
 
+  # !!! adding workers ; check package parallel!!!
+  # !!! adding session criterion !!!
+  library(BiocParallel)
+  parallel_fn <- ifelse(Sys.info()["sysname"]=="Windows", BiocParallel::SnowParam, BiocParallel::MulticoreParam) 
+  register(parallel_fn(workers =  parallel::detectCores()-1))
   tryCatch({
     lincs_results <- signatureSearch::gess_lincs(
       qSig    = query_signature,
