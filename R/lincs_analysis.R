@@ -225,7 +225,7 @@ perform_lincs_gess <- function(query_signature, output_dir, experiment_name) {
   # !!! adding workers ; check package parallel!!!
   # !!! adding session criterion !!!
   library(BiocParallel)
-  parallel_fn <- ifelse(Sys.info()["sysname"]=="Windows", BiocParallel::SnowParam, BiocParallel::MulticoreParam) 
+  parallel_fn <- if(Sys.info()["sysname"]=="Windows") BiocParallel::SnowParam else BiocParallel::MulticoreParam 
   register(parallel_fn(workers =  parallel::detectCores()-1))
   tryCatch({
     lincs_results <- signatureSearch::gess_lincs(
