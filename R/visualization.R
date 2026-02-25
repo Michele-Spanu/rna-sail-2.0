@@ -328,12 +328,15 @@ create_pca_plot <- function(expr_data, metadata, color_by, shape_by = NULL,
 #' @export
 create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n_genes = 500,
                                       scale_data = TRUE, color_mapping = NULL,
-                                      output_file = NULL, min.width = 5, height = 8) {
+                                      output_file = NULL, min.width = 5, height = 8,
+                                      title = NULL, col.cluster = TRUE, rank.order = TRUE,
+                                      long.heatmap = FALSE) {
   message("starting heatmap ")
 
   gene_vars <- apply(expr_data, 1, var, na.rm = TRUE)
-  top_genes <- names(sort(gene_vars, decreasing = TRUE))[1:min(n_genes, nrow(expr_data))]
-  expr_subset <- expr_data[top_genes, ]
+  # !!! Added last three pars to the fn, and here changed the top_genes criterion !!!
+  top_genes <- if (rank.order) names(sort(gene_vars, decreasing = TRUE))[1:min(n_genes, nrow(expr_data))] else names(gene_vars)
+  expr_subset <- expr_data[top_genes, , drop = FALSE]
 
   expr_scaled <- if (scale_data) t(scale(t(expr_subset))) else as.matrix(expr_subset)
   message("starting heatmap 1")
@@ -342,7 +345,7 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
   sample_order <- match(colnames(expr_scaled), metadata$SampleID)
   metadata_ordered <- metadata[sample_order, , drop = FALSE]
   metadata_ordered <- metadata_ordered[!is.na(metadata_ordered$SampleID), ]
-  expr_scaled <- expr_scaled[, colnames(expr_scaled) %in% metadata_ordered$SampleID]
+  expr_scaled <- expr_scaled[, colnames(expr_scaled) %in% metadata_ordered$SampleID, drop = FALSE]
   message("starting heatmap 2")
   if (requireNamespace("ComplexHeatmap", quietly = TRUE) &&
       requireNamespace("circlize", quietly = TRUE)) {
@@ -380,24 +383,28 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
         recursive = TRUE,
         showWarnings = FALSE
         )
-        # !!! Dynamic width !!!
-        pdf(output_file, width = 0.18*ncol(expr_scaled)+min.width, height = height)
+        # !!! Dynamic width and length!!!
+        height <- if (long.heatmap) 4+0.15*lenght(top_genes) else height
+        pdf(output_file, width = min.width+0.18*ncol(expr_scaled), height = height)
     }
     message("starting heatmap 6")
 
+    # !!! Fixed colour intensity scale for non-norm. data, show_row_names, row_names_side, row_name_gp, col.cluster, title !!!
     ht <- ComplexHeatmap::Heatmap(
       expr_scaled,
       name = ifelse(scale_data, "Expression\n(Z-score)", "Expression"),
       col = circlize::colorRamp2(
-        if (scale_data) c(-2, 0, 2) else range(expr_scaled, na.rm = TRUE),
+        if (scale_data) c(-2, 0, 2) else {c(min(expr_scaled, na.rm = TRUE), 0, max(expr_scaled, na.rm = TRUE))},
         c("blue", "white", "red")
       ),
       top_annotation = ha,
-      show_row_names = FALSE,
+      show_row_names = long.heatmap,
+      row_names_side = "left",
+      row_name_gp = grid::gpar(fontsize = 10)
       show_column_names = TRUE,
       cluster_rows = TRUE,
-      cluster_columns = TRUE,
-      column_title = paste("Expression Heatmap -", n_genes, "Most Variable Genes"),
+      cluster_columns = col.cluster,
+      column_title = if (!is.null(title)) title else paste("Expression Heatmap -", n_genes, "Most Variable Genes"),
       heatmap_legend_param = list(direction = "vertical")
     )
 
