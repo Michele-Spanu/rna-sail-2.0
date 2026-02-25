@@ -95,21 +95,17 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
   # Define shared color mapping
   conditions <- unique(metadata_matched$condition)
   n_conditions <- length(conditions)
-
-  if (n_conditions <= 9) {
-    condition_colors <- setNames(
-      RColorBrewer::brewer.pal(n_conditions, "Set1"),
-      conditions
-    )
-  } else {
-    if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
-      stop("More than 9 conditions found; please install 'ComplexHeatmap' or supply custom colors.")
-    }
-    condition_colors <- setNames(
-      circlize::rand_color(n_conditions),
-      conditions
-    )
-  }
+  # !!! Changed way palette is taken !!!
+  pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(9."Set1"))
+  condition_colors <- setNames(
+    pal(n_levels),
+    levels_color
+  )
+  condition_colors <- setNames(
+    RColorBrewer::brewer.pal(n_conditions, "Set1"),
+    conditions
+  )
+  
   # PCA plot
   pca_result <- create_pca_plot(
     pc_tpm_processed, metadata_matched,
