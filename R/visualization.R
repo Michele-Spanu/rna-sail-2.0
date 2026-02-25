@@ -249,26 +249,18 @@ create_pca_plot <- function(expr_data, metadata, color_by, shape_by = NULL,
   }
 
   # ── 4. Define color mapping ────────────────────────────────
+  # !!! Palette defined as in heatmap !!!
   if (is.null(color_mapping)) {
     levels_color <- unique(na.omit(metadata_matched[[color_by]]))
     n_levels <- length(levels_color)
 
-    if (n_levels <= 9) {
-      color_mapping <- setNames(
-        RColorBrewer::brewer.pal(n_levels, "Set1"),
+    pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(9."Set1"))
+    color_mapping <- setNames(
+        pal(n_levels),
         levels_color
-      )
-    } else {
-      # Use rand_color for >9 categories
-      if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
-        stop("More than 9 categories detected; please install 'ComplexHeatmap' or provide custom color_mapping.")
-      }
-      color_mapping <- setNames(
-        circlize::rand_color(n_levels),
-        levels_color
-      )
-    }
+    )
   }
+                       
   p <- ggplot2::ggplot(
     pca_data,
     ggplot2::aes(x = PC1, y = PC2, color = .data[[color_by]])
