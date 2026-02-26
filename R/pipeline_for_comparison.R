@@ -1,3 +1,15 @@
+search_mate <- function(vector, mate, pattern, split) {
+  vector <- grep(pattern = pattern, unique(vector), value = TRUE)
+  mate <- strsplit(mate, split = split)[[1]]
+  matches <- sapply(vector, function(x) {
+   one <- strsplit(vector, split = split)
+   any(mapply(´==´, one, mate, SIMPLIFY = TRUE))
+  }
+                    
+  return(vector[matches])
+}
+
+
 #' Run Complete RNA-seq Analysis Pipeline
 #'
 #' Runs the complete RNA-seq analysis pipeline including preprocessing,
@@ -25,10 +37,11 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
                                  group1_condition, group2_condition,
                                  condition_column = "condition",
                                  sample_id_column = "SampleID",
+                                 stratify_by = NULL,
                                  experiment_name, output_dir, species = "mouse",
                                  run_wgcna = TRUE, run_tf_analysis = TRUE,
                                  run_immune_analysis = TRUE, run_lincs_analysis = TRUE,
-                                 remove_samples = NULL, lfc_threshold = 1,color_volcano_up="#CA3433",color_volcano_down="#2B7CB6",genes_to_label=NULL,covariates = NULL, design_formula = NULL, contrast_string = NULL,
+                                 remove_samples = NULL, lfc_threshold = 1,color_volcano_up="#CA3433",color_volcano_down="#2B7CB6",genes_to_label=NULL, design_formula = NULL, contrast_string = NULL,
                                  fdr_threshold = 0.05,point_size_volcano=4,label_size_volcano=5,n_labels_up=10,n_labels_down=10,gsea_custom_pathways=NULL,n_gsea_enrich_up=5,n_gsea_enrich_down=5, color_gsea_down="#2B7CB6", color_gsea_up="#CA3433",color_gsea_ns="#C5C6C7",run_ssgsea=TRUE, ssgsea_extra_pathways=NULL, ssgsea_n_boxplot_pathways = 20)
   {
 
@@ -90,10 +103,13 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
     pc_tpm = pc_tpm_processed,
     metadata = metadata_matched
   )
+
+  metadata_matched$merged_col <- apply(metadata_matched[ , c(condition,stratify_by), drop = FALSE], 1, paste, collapse = "--")
+  
   # ========== 2. Exploratory Data Analysis ==========
   message("\nStep 2: Exploratory data analysis...")
   # Define shared color mapping
-  conditions <- unique(metadata_matched$condition)
+  conditions <- unique(metadata_matched$merged_col)
   n_conditions <- length(conditions)
   # !!! Changed way palette is taken !!!
   pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(9."Set1"))
@@ -101,15 +117,11 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
     pal(n_levels),
     levels_color
   )
-  condition_colors <- setNames(
-    RColorBrewer::brewer.pal(n_conditions, "Set1"),
-    conditions
-  )
   
   # PCA plot
   pca_result <- create_pca_plot(
     pc_tpm_processed, metadata_matched,
-    color_by = condition_column,
+    color_by = "merged_col",
     output_file = file.path(output_dir, paste0(experiment_name, "_PCA.pdf"))
   )
 
@@ -118,7 +130,7 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
 
   create_expression_heatmap(
     pc_tpm_processed, metadata_matched,
-    annotation_columns = condition_column,
+    annotation_columns = "merged_col",
     output_file = file.path(output_dir, paste0(experiment_name, "_expression_heatmap.pdf"))
   )
 
@@ -129,99 +141,117 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
   # ========== 3. Differential Expression Analysis ==========
   message("\nStep 3: Differential expression analysis...")
 
-  de_results <- run_differential_expression(
-    counts_data = pc_counts_processed,
-    metadata = metadata_matched,
+  de_results <- list()
+  
+  for (group in grep(pattern = group1_condition, unique(metadata_matched$merged_col), value = TRUE)) {
+    samples <- c(metadata_matched$SampleID[metadata_matched$merged_col == search_mate(metadata_matched$merged_col, 
+                                                                                     mate = group, pattern = group2_condition, 
+                                                                                     split = "--")],
+                metadata_matched$SampleID[metadata_matched$merged_col == group])
+
+    de_results[[group]] <- run_differential_expression(
+    counts_data = pc_counts_processed[, samples],
+    metadata = metadata_matched[metadata_matched %in% samples, ],
     group1_condition = group1_condition,
     group2_condition = group2_condition,
     condition_column = condition_column,
     sample_id_column = sample_id_column,
-    experiment_name = experiment_name,
-    output_dir = output_dir,
+    experiment_name = group,
+    output_dir = file.path(output_dir, group),
     lfc_threshold = lfc_threshold,
     fdr_threshold = fdr_threshold,
     covariates = covariates,
     design_formula = design_formula,
     contrast_string = contrast_string
-  )
+    )
 
-  # Create visualizations
-  create_volcano_plot(
-    de_results$de_results$efit,
-    fdr_threshold = fdr_threshold,              # keep your current choice
-    lfc_threshold = lfc_threshold,
-    output_file  = file.path(output_dir, paste0(experiment_name, "_volcano_plot.pdf")),
-    color_up     = color_volcano_up,
-    color_down   = color_volcano_down,
-    point_size        = point_size_volcano,
-    label_size        = label_size_volcano,
-    n_labels_up       = n_labels_up,
-    n_labels_down     = n_labels_down,
-    highlight_genes = genes_to_label
+    # Create visualizations
+    create_volcano_plot(
+      de_results[[group]]$de_results$efit,
+      fdr_threshold = fdr_threshold,              # keep your current choice
+      lfc_threshold = lfc_threshold,
+      output_file  = file.path(output_dir, group, paste0(group, "_volcano_plot.pdf")),
+      color_up     = color_volcano_up,
+      color_down   = color_volcano_down,
+      point_size        = point_size_volcano,
+      label_size        = label_size_volcano,
+      n_labels_up       = n_labels_up,
+      n_labels_down     = n_labels_down,
+      highlight_genes = genes_to_label
     # color_ns keeps default "grey50", or you can add a color_volcano_ns arg as well
-  )
+    )
 
-  create_ma_plot(
-    de_results$de_results$efit,
-    output_file = file.path(output_dir, paste0(experiment_name, "_MA_plot.pdf"))
-  )
+    
+    create_ma_plot(
+      de_results[[group]]$de_results$efit,
+      output_file = file.path(output_dir, group, paste0(group, "_MA_plot.pdf"))
+    )
 
-  create_pie_chart(
-    de_results$de_results$efit,
-    output_file = file.path(output_dir, paste0(experiment_name, "_DE_pie_chart.pdf"))
-  )
+    create_pie_chart(
+      de_results[[group]]$de_results$efit,
+      output_file = file.path(output_dir, group, paste0(group, "_DE_pie_chart.pdf"))
+    )
 
+  }
+
+  
   results$differential_expression <- de_results
 
   # ========== 4. Pathway Analysis ==========
   message("\nStep 4: Pathway analysis...")
 
-  # GSEA analysis
-  gsea_results <- run_gsea_analysis(
-    de_results = de_results$de_results$efit,
-    species = ifelse(species == "mouse", "MM", "HS")
+  gsea_results <- gsea_gene_sets <- gsea_gene_ranks <- list()
+  
+  for (group in names(de_results)) {
+      # GSEA analysis
+    gsea_results[[group]] <- run_gsea_analysis(
+      de_results = de_results[[group]]$de_results$efit,
+      species = ifelse(species == "mouse", "MM", "HS")
   )
 
-  # Extract gene sets and ranks once here
-  gsea_gene_sets  <- attr(gsea_results, "gene_sets")
-  gsea_gene_ranks <- attr(gsea_results, "gene_ranks")
-  print(gsea_gene_sets)
-  print(gsea_gene_ranks)
-  # Create GSEA visualizations
-  plot_gsea_barplot(
-    gsea_results,
-    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_barplot.pdf")),
-    color_up = color_gsea_up,
-    color_down = color_gsea_down,
-    color_ns=color_gsea_ns
-  )
+      # Extract gene sets and ranks once here
+    gsea_gene_sets[[group]]  <- attr(gsea_results, "gene_sets")
+    gsea_gene_ranks[[group]] <- attr(gsea_results, "gene_ranks")
+    print(gsea_gene_sets[[group]])
+    print(gsea_gene_ranks[[group]])
+    
+      # Create GSEA visualizations
+    plot_gsea_barplot(
+      gsea_results[[group]],
+      output_file = file.path(output_dir, group, paste0(group, "_GSEA_barplot.pdf")),
+      color_up = color_gsea_up,
+      color_down = color_gsea_down,
+      color_ns=color_gsea_ns
+    )
+    
+    plot_gsea_dotplot(
+      gsea_results[[group]],
+      output_file = file.path(output_dir, group, paste0(group, "_GSEA_dotplot.pdf")),
+      color_up = color_gsea_up,
+      color_down = color_gsea_down,
+      color_ns = color_gsea_ns
+    )
+    create_gsea_table_plot(
+      gsea_results[[group]],
+      output_file = file.path(output_dir, group, paste0(group, "_GSEA_tableplot.pdf")),
+      gene_sets = gsea_gene_sets[[group]],
+      gene_ranks = gsea_gene_ranks[[group]]
+    )
 
-  plot_gsea_dotplot(
-    gsea_results,
-    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_dotplot.pdf")),
-    color_up = color_gsea_up,
-    color_down = color_gsea_down,
-    color_ns = color_gsea_ns
-  )
-  create_gsea_table_plot(
-    gsea_results,
-    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_tableplot.pdf")),
-    gene_sets = gsea_gene_sets,
-    gene_ranks = gsea_gene_ranks
-  )
+    
+    plot_gsea_enrichment(
+      gsea_results[[group]],
+      pathways    = gsea_custom_pathways,   # NULL ⇒ auto top up/down
+      n_up        = n_gsea_enrich_up,
+      n_down      = n_gsea_enrich_down,
+      output_file = file.path(output_dir, group, paste0(group, "_GSEA_enrichment.pdf")),
+      gene_sets   = gsea_gene_sets[[group]],
+      gene_ranks  = gsea_gene_ranks[[group]]
+    )
 
-  plot_gsea_enrichment(
-    gsea_results,
-    pathways    = gsea_custom_pathways,   # NULL ⇒ auto top up/down
-    n_up        = n_gsea_enrich_up,
-    n_down      = n_gsea_enrich_down,
-    output_file = file.path(output_dir, paste0(experiment_name, "_GSEA_enrichment.pdf")),
-    gene_sets   = gsea_gene_sets,
-    gene_ranks  = gsea_gene_ranks
-  )
-
-  # Save pathway results
-  save_pathway_results(gsea_results, NULL, experiment_name, output_dir)
+    # Save pathway results
+    save_pathway_results(gsea_results[[group]], NULL, group, file.path(output_dir, group))
+  }
 
   results$pathway_analysis <- list(
     gsea = gsea_results,
