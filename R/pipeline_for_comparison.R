@@ -37,12 +37,16 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
                                  group1_condition, group2_condition,
                                  condition_column = "condition",
                                  sample_id_column = "SampleID",
-                                 stratify_by = NULL,
+                                 stratify_by = NULL, design_formula = NULL, contrast_string = NULL,
                                  experiment_name, output_dir, species = "mouse",
-                                 run_wgcna = TRUE, run_tf_analysis = TRUE,
+                                 run_wgcna = TRUE, run_tf_analysis = TRUE, run_ssgsea=TRUE,
                                  run_immune_analysis = TRUE, run_lincs_analysis = TRUE,
-                                 remove_samples = NULL, lfc_threshold = 1,color_volcano_up="#CA3433",color_volcano_down="#2B7CB6",genes_to_label=NULL, design_formula = NULL, contrast_string = NULL,
-                                 fdr_threshold = 0.05,point_size_volcano=4,label_size_volcano=5,n_labels_up=10,n_labels_down=10,gsea_custom_pathways=NULL,n_gsea_enrich_up=5,n_gsea_enrich_down=5, color_gsea_down="#2B7CB6", color_gsea_up="#CA3433",color_gsea_ns="#C5C6C7",run_ssgsea=TRUE, ssgsea_extra_pathways=NULL, ssgsea_n_boxplot_pathways = 20)
+                                 remove_samples = NULL, lfc_threshold = 1,
+                                 color_volcano_up="#CA3433", color_volcano_down="#2B7CB6", genes_to_label=NULL,
+                                 fdr_threshold = 0.05, point_size_volcano=4, label_size_volcano=5, n_labels_up=10, n_labels_down=10,
+                                 gsea_custom_pathways=NULL, n_gsea_enrich_up=5, n_gsea_enrich_down=5, 
+                                 color_gsea_down="#2B7CB6", color_gsea_up="#CA3433", color_gsea_ns="#C5C6C7", 
+                                 ssgsea_extra_pathways=NULL, ssgsea_n_boxplot_pathways = 20, customed_pathways)
   {
 
   # Start timing
@@ -206,8 +210,9 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
       # GSEA analysis
     gsea_results[[group]] <- run_gsea_analysis(
       de_results = de_results[[group]]$de_results$efit,
-      species = ifelse(species == "mouse", "MM", "HS")
-  )
+      species = ifelse(species == "mouse", "MM", "HS"),
+      customed_pathways = customed_pathways
+    )
 
       # Extract gene sets and ranks once here
     gsea_gene_sets[[group]]  <- attr(gsea_results, "gene_sets")
