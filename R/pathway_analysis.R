@@ -14,8 +14,8 @@
 
 run_gsea_analysis <- function(de_results, species = "MM", category = "H",
                               subcategory = NULL, min_size = 15, max_size = 500,
-                              n_perm = 100000, customed_pathways = NULL) {
-  # !!! species="MM" not "Mus musculus" + added customed_pathways !!!
+                              n_perm = 100000, extra_pathways = NULL) {
+  # !!! species="MM" not "Mus musculus" + added extra_pathways !!!
   # Check required packages
   required_pkgs <- c("fgsea", "msigdbr", "limma")
   for (pkg in required_pkgs) {
@@ -51,8 +51,8 @@ run_gsea_analysis <- function(de_results, species = "MM", category = "H",
   }
 
   gene_sets <- split(gene_sets_df$ensembl_gene, gene_sets_df$gs_name)
-  # !!! Adding the customed pathways !!!
-  if (!is.null(customed_pathways)) gene_sets <- c(gene_sets, customed_pathways)
+  # !!! Adding the extra pathways !!!
+  if (!is.null(extra_pathways)) gene_sets <- c(gene_sets, extra_pathways)
   
   message("Loaded ", length(gene_sets), " gene sets")
 
