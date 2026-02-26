@@ -183,7 +183,11 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
   # ========== 4. Pathway Analysis ==========
   message("\nStep 4: Pathway analysis...")
 
+  # !!! Retrieving extra pathways and checking gene existence!!!
   customed_pathways <- retrieve_pathway(customed_pathway_file, species)
+  sapply(customed_pathways, function(x) )
+
+  
   # GSEA analysis
   gsea_results <- run_gsea_analysis(
     de_results = de_results$de_results$efit,
