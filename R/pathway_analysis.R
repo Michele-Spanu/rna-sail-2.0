@@ -555,7 +555,7 @@ save_pathway_results <- function(gsea_results, camera_results = NULL, experiment
 }
 
 # !!! Remember to check package existance: readxl and biomaRt !!!
-retrieve_pathway <- function(file.path) {
+retrieve_pathway <- function(file.path, species) {
   pathway_list <- list()
   
   pathway_names <- readx::excel_sheets(file.path, species)
