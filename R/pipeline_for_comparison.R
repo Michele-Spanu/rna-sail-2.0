@@ -33,7 +33,7 @@ search_mate <- function(vector, mate, pattern, split) {
 #' @param remove_samples Character vector of sample names to remove (optional)
 #' @return List containing results from all analyses
 #' @export
-run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file,
+run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file,
                                  group1_condition, group2_condition,
                                  condition_column = "condition",
                                  sample_id_column = "SampleID",
@@ -274,8 +274,9 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
       sample_id_column = sample_id_column,
       group1           = group1_condition,
       group2           = group2_condition,
+      stratify_by      = stratify_by,
       species          = species,
-      extra_pathways   = ssgsea_extra_pathways,
+      extra_pathways   = extra_pathways,
       output_dir       = output_dir,
       experiment_name  = experiment_name,
       n_boxplot_pathways = ssgsea_n_boxplot_pathways
