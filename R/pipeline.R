@@ -129,6 +129,16 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
     output_file = file.path(output_dir, paste0(experiment_name, "_expression_heatmap.pdf"))
   )
 
+  # Long Expression heatmap
+  
+  create_expression_heatmap(
+    pc_tpm_processed, metadata_matched,
+    annotation_columns = condition_column,
+    output_file = file.path(output_dir, paste0(experiment_name, "_long_expression_heatmap.pdf")),
+    long.heatmap = TRUE
+  )
+  
+
   results$exploratory <- list(
     pca = pca_result
   )
