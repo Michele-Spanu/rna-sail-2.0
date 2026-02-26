@@ -553,3 +553,34 @@ save_pathway_results <- function(gsea_results, camera_results = NULL, experiment
 
   invisible()
 }
+
+# !!! Remember to check package existance: readxl and biomaRt !!!
+retrieve_pathway <- function(file.path) {
+  pathway_list <- list()
+  
+  pathway_names <- readx::excel_sheets(file.path, species)
+  for (pathway in pathway_names) {
+      # File must contain a col with the NCBI Entrez ID (named "NCBI") or one with the ENSEMBL IDs (named "ENSEMBL") or one containing the gene Symbol (named "Symbol")  
+    excel.df <- readxl::read_excel(file.path, sheet=pathway)
+  
+    if ("ENSEMBL" %in% colnames(excel.df)) pathway_list[[pathway]] <- unique(excel.df$ENSEMBL) else {
+      ensembl <- biomaRt::useEnsembl(biomart = "genes", 
+                                     dataset = if (species=="mouse")  "mmusculus_gene_ensembl" else "hsapiens_gene_symbol")
+      if ("NCBI" %in% colnames(excel.df)) {
+        gene_IDs <- getBM(attributes = c("entrezgene_id", "ensembl_gene_id", "external_gene_name"),
+                          filters = "entrezgene_id", values = unique(excel.df$NCBI), 
+                          mart = ensembl, useCache = FALSE)
+      } else {
+        if ("Symbol" %in% colnames(excel.df)) {
+          gene_IDs <- getBM(attributes = c("hgnc_symbol", "ensembl_gene_id"),
+                            filters = "hgnc_symbol", values = unique(excel.df$Symbol),
+                            mart = ensembl, useCache = TRUE)
+        } else  stop("There is no column with NCBI, ENSEMBL, or Symbol ID in sheet:", pathway)
+      }
+
+      pathway_list[[pathway]] <- unique(gene_IDs$ensembl_gene_id)
+    }
+  }
+
+return(pathway_list)
+}
