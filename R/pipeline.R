@@ -261,7 +261,7 @@ run_complete_pipeline <- function(counts_file, tpm_file, metadata_file, gtf_file
       group1           = group1_condition,
       group2           = group2_condition,
       species          = species,
-      extra_pathways   = ssgsea_extra_pathways,
+      extra_pathways   = extra_pathways,
       output_dir       = output_dir,
       experiment_name  = experiment_name,
       n_boxplot_pathways = ssgsea_n_boxplot_pathways
