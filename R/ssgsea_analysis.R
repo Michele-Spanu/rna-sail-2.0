@@ -31,6 +31,7 @@ run_ssgsea_analysis <- function(
     sample_id_column,
     group1,
     group2,
+    stratify_by      = NULL,
     species          = "mouse",
     extra_pathways   = NULL,
     min_size         = 15,
@@ -174,7 +175,14 @@ run_ssgsea_analysis <- function(
     score   = as.vector(ssgsea_scores),
     stringsAsFactors = FALSE
   )
-  
+
+  # !!! Creation of extra cols necessary for downstream handling !!!
+  metadata$merged_col <- NULL
+  if (!is.null(stratify_by)) {
+      metadata$merged_col <- apply(metadata[ , c(stratify_by, condition_column)], 1, paste, collapse = "--")
+      condition_column = "merged_col"
+  }
+
   meta_sub <- metadata[, c(sample_id_column, condition_column)]
   colnames(meta_sub)[colnames(meta_sub) == sample_id_column] <- "sample"
   
@@ -187,24 +195,38 @@ run_ssgsea_analysis <- function(
   for (i in seq_along(pathways)) {
     pw <- pathways[i]
     df_pw <- scores_long[scores_long$pathway == pw, ]
-    g1 <- df_pw$score[df_pw$Group == group1]
-    g2 <- df_pw$score[df_pw$Group == group2]
-    
-    pval <- NA_real_
-    if (length(g1) > 1 && length(g2) > 1) {
-      pval <- tryCatch(
-        stats::wilcox.test(g1, g2)$p.value,
-        error = function(e) NA_real_
-      )
-    }
-    
-    stats_list[[i]] <- data.frame(
-      pathway      = pw,
-      median_group1 = median(g1, na.rm = TRUE),
-      median_group2 = median(g2, na.rm = TRUE),
-      p_value       = pval,
-      stringsAsFactors = FALSE
-    )
+
+    # !!! Control against the various conditions !!!
+    tmp <- lapply(grep(pattern = group1, unique(metadata$merged_col), value = TRUE), function(x) {
+        grp1 <- if (is.na(x)) group1 else x
+        grp2 <- if (is.na(x)) group2 else search_mate(metadata$merged_col, mate = x, 
+                                                      pattern = group2, split = "--")
+        
+        g1 <- df_pw$score[df_pw$Group == grp1]
+        g2 <- df_pw$score[df_pw$Group == grp2]
+
+        pval <- NA_real_
+        if (length(g1) > 1 && length(g2) > 1) {
+            pval <- tryCatch(
+                stats::wilcox.test(g1, g2)$p.value,
+                error = function(e) NA_real_
+            )
+        }
+        
+        stats_list[[i]] <- data.frame(
+              pathway       = pw,
+              median_group1 = median(g1, na.rm = TRUE),
+              median_group2 = median(g2, na.rm = TRUE),
+              p_value       = pval,
+              stringsAsFactors = FALSE
+        )
+
+        if (!is.na(x)) df$group <- x
+
+        df
+    })
+      
+    stats_list[[i]] <- do.call(rbind, tmp)
   }
   
   stats_df <- do.call(rbind, stats_list)
@@ -216,11 +238,26 @@ run_ssgsea_analysis <- function(
   
   # ----- 6) Boxplots for top pathways -----
   message("Creating ssGSEA boxplots for top pathways...")
-  
   # pick top by adjusted p-value
-  stats_df <- stats_df[order(stats_df$padj), ]
-  n_plot <- min(n_boxplot_pathways, nrow(stats_df))
-  top_pw <- stats_df$pathway[seq_len(n_plot)]
+    # !!! Extending to multiple entries per pathway + comp for boxplots ; Make sure dplyr is loaded !!!
+  if (!is.null(stratify_by)) {
+      stats_df <- stats_df %>%
+              group_by(pathway) %>%
+              summarise(padj = min(padj, na.rm = TRUE))
+      stats_df <- stats_df[order(stats_df$padj), ]
+      n_plot <- min(n_boxplot_pathways, nrow(stats_df))
+      top_pw <- stats_df$pathway[seq_len(n_plot)]
+      comparisons <- lapply(grep(group2, unique(metadata$merged_col), value = TRUE),
+                            function(x) c(search_mate(metadata$merged_col, mate = x, 
+                                                      pattern = group2, split = "--"),
+                                          x))
+  } else {
+      stats_df <- stats_df[order(stats_df$padj), ]
+      n_plot <- min(n_boxplot_pathways, nrow(stats_df))
+      top_pw <- stats_df$pathway[seq_len(n_plot)]
+      comparisons <- list(c(group2, group1))
+  }
+  
   
   # Clean pathway names for plotting
   scores_long$pathway_clean <- gsub("HALLMARK_", "", scores_long$pathway)
@@ -236,7 +273,8 @@ run_ssgsea_analysis <- function(
   )
   
   boxplot_file <- file.path(output_dir, paste0(experiment_name, "_ssGSEA_boxplots.pdf"))
-  grDevices::pdf(boxplot_file, width = 11, height = 30)
+  # !!! Changed pdf size and overall layout of boxplots in a page!!!
+  grDevices::pdf(boxplot_file, width = 18, height = ceiling(n_plot/3)*7)
   
   p <- ggplot2::ggplot(
     scores_plot,
@@ -249,18 +287,16 @@ run_ssgsea_analysis <- function(
     ggpubr::stat_compare_means(
       method = "wilcox.test",
       label = "p.signif",
-      comparisons = list(c(group1, group2))
+      comparisons = comparisons,
+      step.increase = if (is.na(metadata$merged_col)) 0 else 0.1 # !!! Added !!! 
     ) +
-    ggplot2::facet_wrap(~ pathway_clean, scales = "free_y") +
+    ggplot2::facet_wrap(~ pathway_clean, scales = "free_y", ncol = 3, axes = "all") +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
-      strip.text = ggplot2::element_text(size = 8),
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-      legend.position = "bottom"
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
     ) +
     ggplot2::labs(
       title = "ssGSEA scores – top pathways",
-      x     = NULL,
       y     = "ssGSEA score"
     )
   
