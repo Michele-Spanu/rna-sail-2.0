@@ -3,8 +3,8 @@ search_mate <- function(vector, mate, pattern, split) {
   mate <- strsplit(mate, split = split)[[1]]
   matches <- sapply(vector, function(x) {
    one <- strsplit(vector, split = split)
-   any(mapply(´==´, one, mate, SIMPLIFY = TRUE))
-  }
+   any(mapply(`==`, one, mate, SIMPLIFY = TRUE))
+  })
                     
   return(vector[matches])
 }
