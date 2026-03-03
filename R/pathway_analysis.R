@@ -585,7 +585,7 @@ retrieve_pathway <- function(file.path, species) {
       }
 
       pathway_list[[pathway]] <- unique(gene_IDs$ensembl_gene_id)
-      message(pathway, " pathway has been added with ", length(pathway_list[[pathway]]) " genes found out of ", n)
+      message(pathway, " pathway has been added with ", length(pathway_list[[pathway]]), " genes found out of ", n)
       
       if (!is.null(matrix_row_names)) {
         matrix_row_ensembl <- sapply(matrix_row_names, function(x) strspit(x, split="_")[[1]][2])
