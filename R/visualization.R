@@ -254,7 +254,7 @@ create_pca_plot <- function(expr_data, metadata, color_by, shape_by = NULL,
     levels_color <- unique(na.omit(metadata_matched[[color_by]]))
     n_levels <- length(levels_color)
 
-    pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(9."Set1"))
+    pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(9,"Set1"))
     color_mapping <- setNames(
         pal(n_levels),
         levels_color
