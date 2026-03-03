@@ -555,10 +555,10 @@ save_pathway_results <- function(gsea_results, camera_results = NULL, experiment
 }
 
 # !!! Remember to check package existance: readxl and biomaRt !!!
-retrieve_pathway <- function(file.path, species) {
+retrieve_pathway <- function(file.path, species, matrix_row_names = NULL) {
   pathway_list <- list()
   
-  pathway_names <- readx::excel_sheets(file.path, species, matrix_row_names = NULL)
+  pathway_names <- readxl::excel_sheets(file.path)
   for (pathway in pathway_names) {
       # File must contain a col with the NCBI Entrez ID (named "NCBI") or one with the ENSEMBL IDs (named "ENSEMBL") or one containing the gene Symbol (named "Symbol")  
     excel.df <- readxl::read_excel(file.path, sheet=pathway)
@@ -568,17 +568,17 @@ retrieve_pathway <- function(file.path, species) {
       pathway_list[[pathway]] <- unique(excel.df$ENSEMBL)
     } else {
       ensembl <- biomaRt::useEnsembl(biomart = "genes", 
-                                     dataset = if (species=="mouse")  "mmusculus_gene_ensembl" else "hsapiens_gene_symbol")
+                                     dataset = if (species=="mouse")  "mmusculus_gene_ensembl" else "hsapiens_gene_ensembl")
       
       if ("NCBI" %in% colnames(excel.df)) {
         n <- length(unique(excel.df$NCBI))
-        gene_IDs <- getBM(attributes = c("entrezgene_id", "ensembl_gene_id", "external_gene_name"),
+        gene_IDs <- biomaRt::getBM(attributes = c("entrezgene_id", "ensembl_gene_id", "external_gene_name"),
                           filters = "entrezgene_id", values = unique(excel.df$NCBI), 
                           mart = ensembl, useCache = FALSE)
       } else {
         if ("Symbol" %in% colnames(excel.df)) {
           n <- length(unique(excel.df$Symbol))
-          gene_IDs <- getBM(attributes = c("hgnc_symbol", "ensembl_gene_id"),
+          gene_IDs <- biomaRt::getBM(attributes = c("hgnc_symbol", "ensembl_gene_id"),
                             filters = "hgnc_symbol", values = unique(excel.df$Symbol),
                             mart = ensembl, useCache = TRUE)
         } else  stop("There is no column with NCBI, ENSEMBL, or Symbol ID in sheet:", pathway)
@@ -588,12 +588,13 @@ retrieve_pathway <- function(file.path, species) {
       message(pathway, " pathway has been added with ", length(pathway_list[[pathway]]), " genes found out of ", n)
       
       if (!is.null(matrix_row_names)) {
-        matrix_row_ensembl <- sapply(matrix_row_names, function(x) strspit(x, split="_")[[1]][2])
-        remove.ind <- which(!patway_list[[pathway]] %in% matrix_row_ensembl)
+        matrix_row_ensembl <- sapply(matrix_row_names, function(x) strsplit(x, split="_")[[1]][2])
+        remove.ind <- which(!pathway_list[[pathway]] %in% matrix_row_ensembl)
 
         if (length(remove.ind)>0) {
-        message("The following genes were not found in the expression data\n", pathway_list[[pathway]][remove.ind])
-        patway_list[[pathway]] <- patway_list[[pathway]][-remove.ind]
+        message("\nThe following genes were not found in the expression data:")
+        print(pathway_list[[pathway]][remove.ind])
+        pathway_list[[pathway]] <- pathway_list[[pathway]][-remove.ind]
         }
       }
     }
