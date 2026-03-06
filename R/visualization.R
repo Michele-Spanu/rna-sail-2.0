@@ -380,7 +380,7 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
         showWarnings = FALSE
         )
         # !!! Dynamic width and length!!!
-        height <- if (long.heatmap) 4+0.15*lenght(top_genes) else height
+        height <- if (long.heatmap) 4+0.15*length(top_genes) else height
         pdf(output_file, width = min.width+0.18*ncol(expr_scaled), height = height)
     }
     message("starting heatmap 6")
