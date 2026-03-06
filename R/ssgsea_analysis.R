@@ -221,9 +221,9 @@ run_ssgsea_analysis <- function(
               stringsAsFactors = FALSE
         )
 
-        if (!is.na(x)) df$group <- x
+        if (!is.na(x)) df_pw$Group <- x
 
-        df
+        df_pw
     })
       
     stats_list[[i]] <- do.call(rbind, tmp)
