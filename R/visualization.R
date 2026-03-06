@@ -324,7 +324,7 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
                                       title = NULL, col.cluster = TRUE, rank.order = TRUE,
                                       long.heatmap = FALSE) {
   
-  ComplexHeatmap::ht_global_opt(reset = TRUE)
+  ComplexHeatmap::ht_opt(RESET = TRUE)
   grid::grid.newpage()
     
   message("starting heatmap ")
