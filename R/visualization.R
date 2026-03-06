@@ -323,9 +323,6 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
                                       output_file = NULL, min.width = 5, height = 8,
                                       title = NULL, col.cluster = TRUE, rank.order = TRUE,
                                       long.heatmap = FALSE) {
-  
-  ComplexHeatmap::ht_opt(RESET = TRUE)
-  grid::grid.newpage()
     
   message("starting heatmap ")
 
@@ -382,6 +379,8 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
         # !!! Dynamic width and length!!!
         height <- if (long.heatmap) 4+0.15*length(top_genes) else height
         pdf(output_file, width = min.width+0.18*ncol(expr_scaled), height = height)
+        ComplexHeatmap::ht_opt(RESET = TRUE)
+        grid::grid.newpage()
     }
     message("starting heatmap 6")
 
@@ -411,7 +410,7 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
     }
 
     return(ht)
-
+    
   } else {
     stop("ComplexHeatmap and circlize packages are required for heatmap plotting.")
   }
