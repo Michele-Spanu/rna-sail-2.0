@@ -244,26 +244,22 @@ run_ssgsea_analysis <- function(
     stats_df <- stats_df %>%
         group_by(pathway) %>%
         summarise(padj = min(padj, na.rm = TRUE)) %>%
-        arrange(padj) %>%          
-        as.data.frame()            
-  } else {
+        arrange(padj) %>%
+        as.data.frame()
+    n_plot <- min(n_boxplot_pathways, nrow(stats_df))
+    top_pw <- stats_df$pathway[seq_len(n_plot)]
+    comparisons <- lapply(grep(group2, unique(metadata$merged_col), value = TRUE),
+                          function(x) c(search_mate(metadata$merged_col, mate = x,
+                                                    pattern = group2, split = "--"),
+                                        x))
+} else {
     stats_df <- stats_df %>%
         arrange(padj) %>%
         as.data.frame()
-  }
-      stats_df <- stats_df[order(stats_df$padj), ]
-      n_plot <- min(n_boxplot_pathways, nrow(stats_df))
-      top_pw <- stats_df$pathway[seq_len(n_plot)]
-      comparisons <- lapply(grep(group2, unique(metadata$merged_col), value = TRUE),
-                            function(x) c(search_mate(metadata$merged_col, mate = x, 
-                                                      pattern = group2, split = "--"),
-                                          x))
-  } else {
-      stats_df <- stats_df[order(stats_df$padj), ]
-      n_plot <- min(n_boxplot_pathways, nrow(stats_df))
-      top_pw <- stats_df$pathway[seq_len(n_plot)]
-      comparisons <- list(c(group2, group1))
-  }
+    n_plot <- min(n_boxplot_pathways, nrow(stats_df))
+    top_pw <- stats_df$pathway[seq_len(n_plot)]
+    comparisons <- list(c(group2, group1))
+}
   
   
   # Clean pathway names for plotting
