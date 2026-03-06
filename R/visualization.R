@@ -323,6 +323,10 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
                                       output_file = NULL, min.width = 5, height = 8,
                                       title = NULL, col.cluster = TRUE, rank.order = TRUE,
                                       long.heatmap = FALSE) {
+  
+  ComplexHeatmap::ht_global_opt(reset = TRUE)
+  grid::grid.newpage()
+    
   message("starting heatmap ")
 
   gene_vars <- apply(expr_data, 1, var, na.rm = TRUE)
