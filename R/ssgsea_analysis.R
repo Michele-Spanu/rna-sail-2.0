@@ -196,10 +196,10 @@ run_ssgsea_analysis <- function(
     pw <- pathways[i]
     df_pw <- scores_long[scores_long$pathway == pw, ]
       
-    vector <- grep(pattern = group1, unique(metadata$merged_col), value = TRUE)
-    if (length(vector)==0) vector <- NA
+    values <- grep(pattern = group1, unique(metadata$merged_col), value = TRUE)
+    if (length(values)==0) values <- NA
     # !!! Control against the various conditions !!!
-    tmp <- lapply(, function(x) {
+    tmp <- lapply(values, function(x) {
         grp1 <- if (is.na(x)) group1 else x
         grp2 <- if (is.na(x)) group2 else search_mate(metadata$merged_col, mate = x, 
                                                       pattern = group2, split = "--")
