@@ -160,7 +160,7 @@ run_ssgsea_analysis <- function(
     show_rownames  = TRUE,
     show_colnames  = FALSE,
     fontsize_row   = 6,
-    main           = "ssGSEA – pathway activity"
+    main           = "ssGSEA - pathway activity"
   )
   print(heatmap_file)
   grDevices::dev.off()
@@ -241,9 +241,16 @@ run_ssgsea_analysis <- function(
   # pick top by adjusted p-value
     # !!! Extending to multiple entries per pathway + comp for boxplots ; Make sure dplyr is loaded !!!
   if (!is.null(stratify_by)) {
-      stats_df <- stats_df %>%
-              group_by(pathway) %>%
-              summarise(padj = min(padj, na.rm = TRUE))
+    stats_df <- stats_df %>%
+        group_by(pathway) %>%
+        summarise(padj = min(padj, na.rm = TRUE)) %>%
+        arrange(padj) %>%          
+        as.data.frame()            
+  } else {
+    stats_df <- stats_df %>%
+        arrange(padj) %>%
+        as.data.frame()
+  }
       stats_df <- stats_df[order(stats_df$padj), ]
       n_plot <- min(n_boxplot_pathways, nrow(stats_df))
       top_pw <- stats_df$pathway[seq_len(n_plot)]
