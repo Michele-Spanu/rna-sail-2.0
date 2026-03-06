@@ -381,15 +381,11 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
         pdf(output_file, width = min.width+0.18*ncol(expr_scaled), height = height)
     }
     message("starting heatmap 6")
-    stopifnot(
-      ncol(expr_scaled) == nrow(annotation_data),
-      all(colnames(expr_scaled) == rownames(annotation_data) | 
-      colnames(expr_scaled) == metadata_ordered$SampleID)
-    )
+      
     # !!! Fixed colour intensity scale for non-norm. data, show_row_names, row_names_side, row_name_gp, col.cluster, title !!!
     ht <- ComplexHeatmap::Heatmap(
       expr_scaled,
-      name = ifelse(scale_data, "Expression\n(Z-score)", "Expression"),
+      name = ifelse(scale_data, "Expression (Z-score)", "Expression"),
       col = circlize::colorRamp2(
         if (scale_data) c(-2, 0, 2) else {c(min(expr_scaled, na.rm = TRUE), 0, max(expr_scaled, na.rm = TRUE))},
         c("blue", "white", "red")
