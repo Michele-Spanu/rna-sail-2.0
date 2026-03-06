@@ -379,8 +379,6 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
         # !!! Dynamic width and length!!!
         height <- if (long.heatmap) 4+0.15*length(top_genes) else height
         pdf(output_file, width = min.width+0.18*ncol(expr_scaled), height = height)
-        ComplexHeatmap::ht_opt(RESET = TRUE)
-        grid::grid.newpage()
     }
     message("starting heatmap 6")
 
@@ -403,7 +401,7 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
       heatmap_legend_param = list(direction = "vertical")
     )
 
-    print(ht)
+    ComplexHeatmap::draw(ht)
     if (!is.null(output_file)) {
       dev.off()
       message("Expression heatmap saved to: ", output_file)
