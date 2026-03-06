@@ -392,7 +392,7 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
       top_annotation = ha,
       show_row_names = long.heatmap,
       row_names_side = "left",
-      row_name_gp = grid::gpar(fontsize = 10),
+      row_names_gp = grid::gpar(fontsize = 10),
       show_column_names = TRUE,
       cluster_rows = TRUE,
       cluster_columns = col.cluster,
