@@ -215,7 +215,7 @@ run_ssgsea_analysis <- function(
             )
         }
         
-        stats_list[[i]] <- data.frame(
+        df <- data.frame(
               pathway       = pw,
               median_group1 = median(g1, na.rm = TRUE),
               median_group2 = median(g2, na.rm = TRUE),
@@ -223,9 +223,9 @@ run_ssgsea_analysis <- function(
               stringsAsFactors = FALSE
         )
 
-        if (!is.na(x)) df_pw$Group <- x
+        if (!is.na(x)) df$Group <- x
 
-        df_pw
+        df
     })
       
     stats_list[[i]] <- do.call(rbind, tmp)
