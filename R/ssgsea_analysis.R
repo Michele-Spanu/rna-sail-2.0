@@ -290,7 +290,7 @@ run_ssgsea_analysis <- function(
       method = "wilcox.test",
       label = "p.signif",
       comparisons = comparisons,
-      step.increase = if (is.na(metadata$merged_col)) 0 else 0.1 # !!! Added !!! 
+      step.increase = if (is.null(metadata$merged_col)) 0 else 0.1 # !!! Added !!! 
     ) +
     ggplot2::facet_wrap(~ pathway_clean, scales = "free_y", ncol = 3, axes = "all") +
     ggplot2::theme_minimal(base_size = 11) +
