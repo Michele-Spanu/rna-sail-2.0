@@ -657,7 +657,7 @@ plot_tf_activity_heatmap <- function(tf_activities,
   pdf(output_file, width = 10, height = 12)
   ht <- ComplexHeatmap::Heatmap(
     tf_scaled,
-    name = "TF Activity\n(Z-score)",
+    name = "TF Activity\nZ-score",
     col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")),
     top_annotation = ha,
     show_row_names = TRUE,
