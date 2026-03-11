@@ -216,6 +216,9 @@ run_differential_expression <- function(counts_data, metadata, group1_condition,
 
   design <- stats::model.matrix(design_f, data = metadata_sub)
 
+  # !!! fix to makeContrasts warning: Renaming (Intercept) to Intercept !!!
+  colnames(design) <- make.names(colnames(design))
+
   # Decide contrast
   if (!is.null(contrast_string)) {
     contrast_matrix <- limma::makeContrasts(contrasts = contrast_string, levels = design)
