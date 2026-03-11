@@ -196,7 +196,7 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
     
     create_ma_plot(
       de_results[[group]]$de_results$efit,
-      plot_title = paste("MA Plot − Mean vs Log Fold Change", 
+      plot_title = paste("MA Plot - Mean vs Log Fold Change", 
                          group_experiment_names[[group]], sep="\n"),
       output_file = file.path(output_dir, group_experiment_names[[group]], 
                               paste0(group_experiment_names[[group]], "_MA_plot.pdf"))
