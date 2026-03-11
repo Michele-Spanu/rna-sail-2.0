@@ -108,7 +108,7 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
     metadata = metadata_matched
   )
 
-  metadata_matched$merged_col <- apply(metadata_matched[ , c(condition,stratify_by), drop = FALSE], 1, paste, collapse = "--")
+  metadata_matched$merged_col <- apply(metadata_matched[ , c(condition_column,stratify_by), drop = FALSE], 1, paste, collapse = "--")
   
   # ========== 2. Exploratory Data Analysis ==========
   message("\nStep 2: Exploratory data analysis...")
