@@ -236,7 +236,7 @@ run_ssgsea_analysis <- function(
   message("Creating ssGSEA boxplots for top pathways...")
   # pick top by adjusted p-value
     # !!! Extending to multiple entries per pathway + comp for boxplots ; Make sure dplyr is loaded !!!
-  if (!is.null(stratify_by)) {
+  if (nrow(stats_df)>length(pathways_filtered)) {
       stats_df <- stats_df %>%
               group_by(pathway) %>%
               summarise(padj = min(padj, na.rm = TRUE))
