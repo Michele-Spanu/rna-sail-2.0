@@ -146,14 +146,19 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
   # ========== 3. Differential Expression Analysis ==========
   message("\nStep 3: Differential expression analysis...")
 
+  group1_conditions <- grep(pattern = paste0("^",group1_condition), unique(metadata_matched$merged_col), value = TRUE)
+  group_experiment_names <- list(sub(pattern = paste0("^",group1_condition,"--"), replacement = "", x = group1_conditions))
+  names(group_experiment_names) <- group1_conditions
+  
   de_results <- list()
   
-  for (group in grep(pattern = paste0("^",group1_condition), unique(metadata_matched$merged_col), value = TRUE)) {
+  for (group in group1_conditions) {
     samples <- c(metadata_matched[[sample_id_column]][metadata_matched$merged_col == search_mate(metadata_matched$merged_col, 
                                                                                      mate = group, pattern = group2_condition, 
                                                                                      split = "--")],
                 metadata_matched[[sample_id_column]][metadata_matched$merged_col == group])
 
+    
     de_results[[group]] <- run_differential_expression(
     counts_data = pc_counts_processed[, samples],
     metadata = metadata_matched[metadata_matched[[sample_id_column]] %in% samples, ],
@@ -161,8 +166,8 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
     group2_condition = group2_condition,
     condition_column = condition_column,
     sample_id_column = sample_id_column,
-    experiment_name = group,
-    output_dir = file.path(output_dir, group),
+    experiment_name = group_experiment_names[[group]],
+    output_dir = file.path(output_dir, group_experiment_names[[group]]),
     lfc_threshold = lfc_threshold,
     fdr_threshold = fdr_threshold,
     design_formula = design_formula,
@@ -174,7 +179,8 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
       de_results[[group]]$de_results$efit,
       fdr_threshold = fdr_threshold,              # keep your current choice
       lfc_threshold = lfc_threshold,
-      output_file  = file.path(output_dir, group, paste0(group, "_volcano_plot.pdf")),
+      output_file  = file.path(output_dir, group_experiment_names[[group]], 
+                               paste0(group_experiment_names[[group]], "_volcano_plot.pdf")),
       color_up     = color_volcano_up,
       color_down   = color_volcano_down,
       point_size        = point_size_volcano,
@@ -182,19 +188,26 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
       n_labels_up       = n_labels_up,
       n_labels_down     = n_labels_down,
       highlight_genes = genes_to_label,
-      plot_title = paste("Volcano Plot - Differential Gene Expression", group, sep="\n")
+      plot_title = paste("Volcano Plot - Differential Gene Expression", 
+                         group_experiment_names[[group]], sep="\n")
     # color_ns keeps default "grey50", or you can add a color_volcano_ns arg as well
     )
 
     
     create_ma_plot(
       de_results[[group]]$de_results$efit,
-      output_file = file.path(output_dir, group, paste0(group, "_MA_plot.pdf"))
+      plot_title = paste("MA Plot − Mean vs Log Fold Change", 
+                         group_experiment_names[[group]], sep="\n"),
+      output_file = file.path(output_dir, group_experiment_names[[group]], 
+                              paste0(group_experiment_names[[group]], "_MA_plot.pdf"))
     )
 
     create_pie_chart(
       de_results[[group]]$de_results$efit,
-      output_file = file.path(output_dir, group, paste0(group, "_DE_pie_chart.pdf"))
+      plot_title = paste("Distribution of Differentially Expressed Genes", 
+                         group_experiment_names[[group]], sep="\n"),
+      output_file = file.path(output_dir, group_experiment_names[[group]], 
+                              paste0(group_experiment_names[[group]], "_DE_pie_chart.pdf"))
     )
 
   }
@@ -224,7 +237,8 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
       # Create GSEA visualizations
     plot_gsea_barplot(
       gsea_results[[group]],
-      output_file = file.path(output_dir, group, paste0(group, "_GSEA_barplot.pdf")),
+      output_file = file.path(output_dir, group_experiment_names[[group]], 
+                              paste0(group_experiment_names[[group]], "_GSEA_barplot.pdf")),
       color_up = color_gsea_up,
       color_down = color_gsea_down,
       color_ns=color_gsea_ns
@@ -232,14 +246,16 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
     
     plot_gsea_dotplot(
       gsea_results[[group]],
-      output_file = file.path(output_dir, group, paste0(group, "_GSEA_dotplot.pdf")),
+      output_file = file.path(output_dir, group_experiment_names[[group]], 
+                              paste0(group_experiment_names[[group]], "_GSEA_dotplot.pdf")),
       color_up = color_gsea_up,
       color_down = color_gsea_down,
       color_ns = color_gsea_ns
     )
     create_gsea_table_plot(
       gsea_results[[group]],
-      output_file = file.path(output_dir, group, paste0(group, "_GSEA_tableplot.pdf")),
+      output_file = file.path(output_dir, group_experiment_names[[group]], 
+                              paste0(group_experiment_names[[group]], "_GSEA_tableplot.pdf")),
       gene_sets = gsea_gene_sets[[group]],
       gene_ranks = gsea_gene_ranks[[group]]
     )
@@ -250,13 +266,15 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
       pathways    = gsea_custom_pathways,   # NULL ⇒ auto top up/down
       n_up        = n_gsea_enrich_up,
       n_down      = n_gsea_enrich_down,
-      output_file = file.path(output_dir, group, paste0(group, "_GSEA_enrichment.pdf")),
+      output_file = file.path(output_dir, group_experiment_names[[group]], 
+                              paste0(group_experiment_names[[group]], "_GSEA_enrichment.pdf")),
       gene_sets   = gsea_gene_sets[[group]],
       gene_ranks  = gsea_gene_ranks[[group]]
     )
 
     # Save pathway results
-    save_pathway_results(gsea_results[[group]], NULL, group, file.path(output_dir, group))
+    save_pathway_results(gsea_results[[group]], NULL, group_experiment_names[[group]], 
+                         file.path(output_dir, group_experiment_names[[group]]))
   }
 
   results$pathway_analysis <- list(
