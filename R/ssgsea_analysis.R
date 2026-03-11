@@ -292,7 +292,7 @@ run_ssgsea_analysis <- function(
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
     ) +
     ggplot2::labs(
-      title = "ssGSEA scores – top pathways",
+      title = "ssGSEA scores - top pathways",
       y     = "ssGSEA score"
     )
   
