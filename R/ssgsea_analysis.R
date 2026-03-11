@@ -31,7 +31,6 @@ run_ssgsea_analysis <- function(
     sample_id_column,
     group1,
     group2,
-    stratify_by      = NULL,
     species          = "mouse",
     extra_pathways   = NULL,
     min_size         = 15,
@@ -177,11 +176,6 @@ run_ssgsea_analysis <- function(
   )
 
   # !!! Creation of extra cols necessary for downstream handling !!!
-  metadata$merged_col <- NULL
-  if (!is.null(stratify_by)) {
-      metadata$merged_col <- apply(metadata[ , c(stratify_by, condition_column)], 1, paste, collapse = "--")
-      condition_column = "merged_col"
-  }
 
   meta_sub <- metadata[, c(sample_id_column, condition_column)]
   colnames(meta_sub)[colnames(meta_sub) == sample_id_column] <- "sample"
@@ -196,12 +190,12 @@ run_ssgsea_analysis <- function(
     pw <- pathways[i]
     df_pw <- scores_long[scores_long$pathway == pw, ]
       
-    values <- grep(pattern = paste0("^", group1), unique(metadata$merged_col), value = TRUE)
+    values <- grep(pattern = paste0("^", group1), unique(metadata[[condition_column]]), value = TRUE)
     if (length(values)==0) values <- NA
     # !!! Control against the various conditions !!!
     tmp <- lapply(values, function(x) {
         grp1 <- if (is.na(x)) group1 else x
-        grp2 <- if (is.na(x)) group2 else search_mate(metadata$merged_col, mate = x, 
+        grp2 <- if (is.na(x)) group2 else search_mate(metadata[[condition_column]], mate = x, 
                                                       pattern = group2, split = "--")
         
         g1 <- df_pw$score[df_pw$Group == grp1]
