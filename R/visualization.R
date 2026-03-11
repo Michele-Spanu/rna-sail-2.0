@@ -426,7 +426,7 @@ create_expression_heatmap <- function(expr_data, metadata, annotation_columns, n
 #' @return ggplot object
 #' @export
 create_ma_plot <- function(de_results, fdr_threshold = 0.05, output_file = NULL,
-                          width = 8, height = 6) {
+                          width = 8, height = 6, plot_title = "MA Plot - Mean vs Log Fold Change") {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required")
@@ -458,7 +458,7 @@ create_ma_plot <- function(de_results, fdr_threshold = 0.05, output_file = NULL,
     ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::labs(
-      title = "MA Plot - Mean vs Log Fold Change",
+      title = plot_title,
       x = "Average Expression",
       y = expression(log[2]~"Fold Change")
     ) +
@@ -489,7 +489,8 @@ create_ma_plot <- function(de_results, fdr_threshold = 0.05, output_file = NULL,
 #' @return ggplot object
 #' @export
 create_pie_chart <- function(de_results, fdr_threshold = 0.05, lfc_threshold = 1,
-                            output_file = NULL, width = 6, height = 6) {
+                             output_file = NULL, width = 6, height = 6, 
+                             plot_title = "Distribution of Differentially Expressed Genes") {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required")
@@ -506,8 +507,8 @@ create_pie_chart <- function(de_results, fdr_threshold = 0.05, lfc_threshold = 1
     ns_count <- sum(decisions == 0)
 
     results_data <- data.frame(
-      category = c("Upregulated", "Downregulated", "Not Significant"),
-      count = c(up_count, down_count, ns_count)
+      category = c("Upregulated", "Downregulated"),
+      count = c(up_count, down_count)
     )
   }
 
@@ -521,12 +522,12 @@ create_pie_chart <- function(de_results, fdr_threshold = 0.05, lfc_threshold = 1
     ggplot2::geom_bar(stat = "identity", width = 1) +
     ggplot2::coord_polar(theta = "y") +
     ggplot2::scale_fill_manual(
-      values = c("Upregulated" = "#E31A1C", "Downregulated" = "#1F78B4",
-                "Not Significant" = "grey70"),
+      values = c("Upregulated" = "#E31A1C", "Downregulated" = "#1F78B4"),
       name = "Gene Category"
     ) +
     ggplot2::theme_void() +
-    ggplot2::labs(title = "Distribution of Differentially Expressed Genes") +
+    ggplot2::labs(title = plot_title, 
+                  caption = paste0("The number of Non-Significant DE genes is:", ns_count)) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 14),
       legend.position = "bottom"
