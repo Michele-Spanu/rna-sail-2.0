@@ -27,7 +27,8 @@ create_volcano_plot <- function(
     n_labels_up        = NULL,        # how many up genes to label
     n_labels_down      = NULL,        # how many down genes to label
     gene_label_column  = NULL,        # column to use for labels (e.g. "gene_name")
-    highlight_genes    = NULL         # NEW: vector of genes to force-label
+    highlight_genes    = NULL,         # NEW: vector of genes to force-label
+    plot_title         = "Volcano Plot - Differential Gene Expression"
 ) {
 
   # Check required packages
@@ -161,7 +162,7 @@ create_volcano_plot <- function(
     ) +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::labs(
-      title = "Volcano Plot - Differential Gene Expression",
+      title = plot_title,
       x     = expression(log[2] ~ "Fold Change"),
       y     = expression(-log[10] ~ "Adjusted P-value")
     ) +
