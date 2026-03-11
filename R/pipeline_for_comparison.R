@@ -147,7 +147,7 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
   message("\nStep 3: Differential expression analysis...")
 
   group1_conditions <- grep(pattern = paste0("^",group1_condition), unique(metadata_matched$merged_col), value = TRUE)
-  group_experiment_names <- list(sub(pattern = paste0("^",group1_condition,"--"), replacement = "", x = group1_conditions))
+  group_experiment_names <- as.list(sub(pattern = paste0("^",group1_condition,"--"), replacement = "", x = group1_conditions))
   names(group_experiment_names) <- group1_conditions
   
   de_results <- list()
