@@ -110,6 +110,10 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
   )
 
   metadata_matched$merged_col <- apply(metadata_matched[ , c(condition_column,stratify_by), drop = FALSE], 1, paste, collapse = "--")
+
+  group1_conditions <- grep(pattern = paste0("^",group1_condition), unique(metadata_matched$merged_col), value = TRUE)
+  group_experiment_names <- as.list(sub(pattern = paste0("^",group1_condition,"--"), replacement = "", x = group1_conditions))
+  names(group_experiment_names) <- group1_conditions
   
   # ========== 2. Exploratory Data Analysis ==========
   message("\nStep 2: Exploratory data analysis...")
@@ -146,9 +150,6 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
   # ========== 3. Differential Expression Analysis ==========
   message("\nStep 3: Differential expression analysis...")
 
-  group1_conditions <- grep(pattern = paste0("^",group1_condition), unique(metadata_matched$merged_col), value = TRUE)
-  group_experiment_names <- as.list(sub(pattern = paste0("^",group1_condition,"--"), replacement = "", x = group1_conditions))
-  names(group_experiment_names) <- group1_conditions
   
   de_results <- list()
   
@@ -220,7 +221,7 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
 
   gsea_results <- gsea_gene_sets <- gsea_gene_ranks <- list()
   
-  for (group in names(de_results)) {
+  for (group in group1_conditions) {
       # GSEA analysis
     gsea_results[[group]] <- run_gsea_analysis(
       de_results = de_results[[group]]$de_results$efit,
@@ -323,18 +324,26 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
   if (run_tf_analysis) {
     message("\nStep 6: Transcription factor activity analysis...")
 
-    tf_results <- run_tf_analysis(
-      expr_data = pc_tpm_processed,
-      metadata = metadata_matched,
-      condition_column = condition_column,
-      group1 = group1_condition,
-      group2 = group2_condition,
-      species = species,
-      output_dir = output_dir,
-      experiment_name = experiment_name,
-      fdr_threshold = 0.05, lfc_threshold = 1
-    )
-
+    tf_results <- list()
+    for (group in group1_conditions) {
+      samples <- c(metadata_matched[[sample_id_column]][metadata_matched$merged_col == search_mate(metadata_matched$merged_col, 
+                                                                                     mate = group, pattern = group2_condition, 
+                                                                                     split = "--")],
+                   metadata_matched[[sample_id_column]][metadata_matched$merged_col == group])
+      
+      tf_results[[group]] <- run_tf_analysis(
+        expr_data = pc_tpm_processed[, samples],
+        metadata = metadata_matched[metadata_matched[[sample_id_column]] %in% samples, ],
+        condition_column = condition_column,
+        group1 = group1_condition,
+        group2 = group2_condition,
+        species = species,
+        output_dir = file.path(output_dir, group_experiment_names[[group]]),
+        experiment_name = group_experiment_names[[group]],
+        fdr_threshold = 0.05, lfc_threshold = 1
+      )
+    }
+      
     results$transcription_factors <- tf_results
   }
 
