@@ -45,9 +45,9 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
                                  remove_samples = NULL, lfc_threshold = 1,
                                  color_volcano_up="#CA3433", color_volcano_down="#2B7CB6", genes_to_label=NULL,
                                  fdr_threshold = 0.05, point_size_volcano=4, label_size_volcano=5, n_labels_up=10, n_labels_down=10,
-                                 gsea_custom_pathways=NULL, n_gsea_enrich_up=5, n_gsea_enrich_down=5, 
+                                 n_gsea_enrich_up=5, n_gsea_enrich_down=5, 
                                  color_gsea_down="#2B7CB6", color_gsea_up="#CA3433", color_gsea_ns="#C5C6C7", 
-                                 ssgsea_extra_pathways=NULL, ssgsea_n_boxplot_pathways = 20, extra_pathways = NULL)
+                                 ssgsea_n_boxplot_pathways = 20, extra_pathways = NULL)
   {
 
   # Start timing
