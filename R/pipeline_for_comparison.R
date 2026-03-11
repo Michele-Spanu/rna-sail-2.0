@@ -358,6 +358,9 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
 
   message("RNA-seq Analysis Pipeline Completed Successfully!")
 
+  end_time <- Sys.time()
+  total_time <- end_time - start_time
+  
   message("Total runtime: ", round(total_time, 2), " ", attr(total_time, "units"))
   message("Results saved in: ", output_dir)
 
