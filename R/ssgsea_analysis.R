@@ -196,7 +196,7 @@ run_ssgsea_analysis <- function(
     pw <- pathways[i]
     df_pw <- scores_long[scores_long$pathway == pw, ]
       
-    values <- grep(pattern = group1, unique(metadata$merged_col), value = TRUE)
+    values <- grep(pattern = paste0("^", group1), unique(metadata$merged_col), value = TRUE)
     if (length(values)==0) values <- NA
     # !!! Control against the various conditions !!!
     tmp <- lapply(values, function(x) {
@@ -249,7 +249,7 @@ run_ssgsea_analysis <- function(
       stats_df <- stats_df[order(stats_df$padj), ]
       n_plot <- min(n_boxplot_pathways, nrow(stats_df))
       top_pw <- stats_df$pathway[seq_len(n_plot)]
-      comparisons <- lapply(grep(group2, unique(metadata$merged_col), value = TRUE),
+      comparisons <- lapply(grep(paste0("^", group2), unique(metadata$merged_col), value = TRUE),
                             function(x) c(search_mate(metadata$merged_col, mate = x, 
                                                       pattern = group2, split = "--"),
                                           x))
