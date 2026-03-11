@@ -1,6 +1,6 @@
 # It's case-insensitive
 search_mate <- function(vector, mate, pattern, split) {
-  vector <- grep(pattern = pattern, unique(vector), value = TRUE)
+  vector <- grep(pattern = paste0("^",pattern), unique(vector), value = TRUE)
   mate <- strsplit(mate, split = split)[[1]]
   matches <- sapply(vector, function(x) {
     one <- strsplit(x, split = split)
