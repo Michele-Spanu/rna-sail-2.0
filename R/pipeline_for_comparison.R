@@ -1,11 +1,12 @@
+# It's case-insensitive
 search_mate <- function(vector, mate, pattern, split) {
   vector <- grep(pattern = pattern, unique(vector), value = TRUE)
   mate <- strsplit(mate, split = split)[[1]]
   matches <- sapply(vector, function(x) {
-   one <- strsplit(vector, split = split)
-   any(mapply(`==`, one, mate, SIMPLIFY = TRUE))
-  })
-                    
+    one <- strsplit(x, split = split)
+    any(mapply(function(a,b) toupper(a)==toupper(b), one, mate, SIMPLIFY = TRUE))
+               })
+  
   return(vector[matches])
 }
 
@@ -147,15 +148,15 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
 
   de_results <- list()
   
-  for (group in grep(pattern = group1_condition, unique(metadata_matched$merged_col), value = TRUE)) {
-    samples <- c(metadata_matched$SampleID[metadata_matched$merged_col == search_mate(metadata_matched$merged_col, 
+  for (group in grep(pattern = paste0("^",group1_condition), unique(metadata_matched$merged_col), value = TRUE)) {
+    samples <- c(metadata_matched[[sample_id_column]][metadata_matched$merged_col == search_mate(metadata_matched$merged_col, 
                                                                                      mate = group, pattern = group2_condition, 
                                                                                      split = "--")],
-                metadata_matched$SampleID[metadata_matched$merged_col == group])
+                metadata_matched[[sample_id_column]][metadata_matched$merged_col == group])
 
     de_results[[group]] <- run_differential_expression(
     counts_data = pc_counts_processed[, samples],
-    metadata = metadata_matched[metadata_matched %in% samples, ],
+    metadata = metadata_matched[metadata_matched[[sample_id_column]] %in% samples, ],
     group1_condition = group1_condition,
     group2_condition = group2_condition,
     condition_column = condition_column,
@@ -216,8 +217,8 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
     )
 
       # Extract gene sets and ranks once here
-    gsea_gene_sets[[group]]  <- attr(gsea_results, "gene_sets")
-    gsea_gene_ranks[[group]] <- attr(gsea_results, "gene_ranks")
+    gsea_gene_sets[[group]]  <- attr(gsea_results[[group]], "gene_sets")
+    gsea_gene_ranks[[group]] <- attr(gsea_results[[group]], "gene_ranks")
     print(gsea_gene_sets[[group]])
     print(gsea_gene_ranks[[group]])
     
