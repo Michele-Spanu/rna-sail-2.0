@@ -182,7 +182,7 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
       n_labels_up       = n_labels_up,
       n_labels_down     = n_labels_down,
       highlight_genes = genes_to_label,
-      title = paste("Volcano Plot - Differential Gene Expression", group, sep="\n")
+      plot_title = paste("Volcano Plot - Differential Gene Expression", group, sep="\n")
     # color_ns keeps default "grey50", or you can add a color_volcano_ns arg as well
     )
 
