@@ -118,7 +118,7 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
   # !!! Changed way palette is taken !!!
   pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(9, "Set1"))
   condition_colors <- setNames(
-    pal(n_levels),
+    pal(n_conditions),
     conditions
   )
   
