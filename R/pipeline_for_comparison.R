@@ -354,23 +354,6 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
   }
 
   # ========== 9. Create Summary Report ==========
-  message("\nStep 9: Creating summary report...")
-
-  create_analysis_summary_report(results, experiment_name, output_dir,
-                                group1_condition, group2_condition)
-
-  # Create comprehensive summary plot
-  create_summary_plot(
-    expr_data = pc_tpm_processed,
-    de_results = de_results$de_results$efit,
-    metadata = metadata_matched,
-    condition_column = condition_column,
-    output_file = file.path(output_dir, paste0(experiment_name, "_summary_plot.pdf"))
-  )
-
-  # Calculate total runtime
-  end_time <- Sys.time()
-  total_time <- end_time - start_time
 
 
   message("RNA-seq Analysis Pipeline Completed Successfully!")
