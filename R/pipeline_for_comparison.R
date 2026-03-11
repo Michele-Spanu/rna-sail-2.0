@@ -276,7 +276,6 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
       sample_id_column = sample_id_column,
       group1           = group1_condition,
       group2           = group2_condition,
-      stratify_by      = stratify_by,
       species          = species,
       extra_pathways   = extra_pathways,
       output_dir       = output_dir,
