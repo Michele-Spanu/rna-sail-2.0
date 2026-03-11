@@ -165,7 +165,6 @@ run_complete_comp_pipeline <- function(counts_file, tpm_file, metadata_file, gtf
     output_dir = file.path(output_dir, group),
     lfc_threshold = lfc_threshold,
     fdr_threshold = fdr_threshold,
-    covariates = covariates,
     design_formula = design_formula,
     contrast_string = contrast_string
     )
