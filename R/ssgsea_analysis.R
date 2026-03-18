@@ -191,7 +191,7 @@ run_ssgsea_analysis <- function(
     df_pw <- scores_long[scores_long$pathway == pw, ]
       
     values <- grep(pattern = paste0("^", group1), unique(metadata[[condition_column]]), value = TRUE)
-    if (length(values)==0) values <- NA
+    if (length(values)==1) values <- NA
     # !!! Control against the various conditions !!!
     tmp <- lapply(values, function(x) {
         grp1 <- if (is.na(x)) group1 else x
