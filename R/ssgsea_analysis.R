@@ -245,7 +245,7 @@ run_ssgsea_analysis <- function(
       top_pw <- stats_df$pathway[seq_len(n_plot)]
       comparisons <- lapply(grep(paste0("^", group2), unique(metadata$merged_col), value = TRUE),
                             function(x) c(search_mate(metadata$merged_col, mate = x, 
-                                                      pattern = group2, split = "--"),
+                                                      pattern = group1, split = "--"),
                                           x))
   } else {
       stats_df <- stats_df[order(stats_df$padj), ]
